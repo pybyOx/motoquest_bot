@@ -7,8 +7,17 @@ else:
     load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-RAPID_API_KEY = os.getenv("RAPID_API_KEY")
-DEFAULT_COMMANDS = (
+
+ADMIN_IDS = list(map(int, os.getenv("ADMIN_IDS", "").split(",")))
+
+PLAYER_COMMANDS = (
     ("start", "Запустить бота"),
-    ("help", "Вывести справку")
+    ("help", "Написать в поддержку"),
+    ("register", "Записаться на игру"),
+    ("cancel", "Отменить запись"),
+    ("info", "Информация о ваших играх")
+)
+ADMIN_COMMANDS = (
+    ("create_game", "Создать сессию"),
+    ("manage_game", "Управлять сессией")
 )
