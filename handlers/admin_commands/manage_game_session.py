@@ -5,17 +5,19 @@ from repositories.repositories import (GameSessionRepository, PlayerSessionRepos
                                        PlayerRepository)
 from utils.decorators.with_context import with_context
 from utils.decorators.ask_confirmation import ask_confirmation
-from keyboards.inline.keyboards import (start_or_delete_keyboard, objects_keyboard, combine_keyboards,
+from utils.decorators.log_exceptions import log_exceptions
+from keyboards.inline_keyboards import (start_or_delete_keyboard, objects_keyboard, combine_keyboards,
                                         cancel_or_back_keyboard)
-from utils.choice_location import send_choice_location
 from utils.misc.get_kwargs import get_kwargs
 from peewee import DoesNotExist
 from utils.misc.exceptions import CreationError, AlreadyExistsError, DeletionError
 import logging
 from handlers.admin_commands.support_utils import user_steps, reset_user_session, bot_messages
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 @bot.message_handler(commands=["manage_game"])
+@log_exceptions()
 @with_context()
 def manage_game_handler(**kwargs):
     logging.info(f"\n\n___manage_game_handler___")
@@ -196,10 +198,9 @@ def start_game_session(game_session: GameSession, user_id: int):
         PlayerRepository.update_instance(player, current_player_session=player_session)
         logging.debug(f"{player}: current_player_session - {player_session} ")
 
-        bot.send_message(player.user_id, "🏁 Игра началась!")
-        logging.debug(f"{player}: отправили сообщение о начале игры")
-
-        send_choice_location(player_session=player_session)
-        logging.debug(f"{player}: выбор локации")
+        bot.send_message(player.user_id, "🏁 Игра началась!",
+                         reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton(text=" Поехали! ",
+                                                                                      callback_data="choice_location")))
+        logging.debug(f"{player}: отправили сообщение о начале игры с кнопкой <поехали>")
 
     bot.edit_message_text(f"✅ Игра '{game_session}' успешно стартовала.", user_id, bot_messages[user_id][-1])

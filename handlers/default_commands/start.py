@@ -4,7 +4,7 @@ import logging
 from utils.decorators.with_context import with_context
 from utils.decorators.log_exceptions import log_exceptions
 from utils.set_bot_commands import set_commands
-from keyboards.inline.keyboards import start_keyboard
+from keyboards.inline_keyboards import start_keyboard
 from config_data.config import ADMIN_IDS
 from utils.misc.get_kwargs import get_kwargs
 from repositories.repositories import PlayerSessionRepository, PlayerRepository
@@ -49,7 +49,7 @@ def call_command_info(**kwargs):
     call, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
     bot.delete_message(chat_id, call.message.message_id)
 
-    send_info(user_id)
+    send_info(call)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "help")
@@ -75,7 +75,7 @@ def call_command_register(**kwargs):
     call, chat_id = get_kwargs(["message_or_callback", "chat_id"], kwargs)
     bot.delete_message(chat_id, call.message.message_id)
 
-    send_sessions_keyboard(chat_id)
+    send_sessions_keyboard(call)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "cancel")
@@ -87,4 +87,4 @@ def call_command_cancel(**kwargs):
     call, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
     bot.delete_message(chat_id, call.message.message_id)
 
-    send_player_sessions_keyboard(user_id)
+    send_player_sessions_keyboard(call)

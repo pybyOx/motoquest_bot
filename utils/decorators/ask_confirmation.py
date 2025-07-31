@@ -3,7 +3,7 @@ from utils.decorators.with_context import with_context
 from utils.decorators.log_exceptions import log_exceptions
 from utils.misc.get_kwargs import get_kwargs
 from functools import wraps
-from keyboards.inline.keyboards import confirm_keyboard
+from keyboards.inline_keyboards import confirm_keyboard
 
 
 # Хранилище ожидающих подтверждений: user_id -> callback

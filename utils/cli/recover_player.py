@@ -3,10 +3,43 @@ from utils.cli.supporting_func.check_data import get_data_from_argv
 from utils.misc.exceptions import CliInputError
 import logging
 from repositories.repositories import PlayerRepository
-from utils.choice_location import call_select_point
+from handlers.admin_commands.manage_game_session import manage_game_handler
+from handlers.custom_handlers.states_handlers import (call_get_clue, call_review, handle_user_answer,
+                                                      handle_waiting_for_review)
+from handlers.default_commands.start import (bot_start, call_command_cancel, call_command_help, call_command_info,
+                                             call_command_register)
+from handlers.users_commands.cancel import bot_cancel, call_cancel, send_player_sessions_keyboard
+from handlers.users_commands.help import bot_help
+from handlers.users_commands.info import bot_info, send_info
+from handlers.users_commands.register import bot_register, call_register, send_sessions_keyboard
+from utils.choice_location import call_arrived, call_finish, call_select_point, send_choice_location
+from utils.decorators.ask_confirmation import handle_confirmation_callback
 
 recovery_map = {
-    "call_select_point": call_select_point}
+    "manage_game_handler": manage_game_handler,
+    "call_get_clue": call_get_clue,
+    "call_review": call_review,
+    "handle_user_answer": handle_user_answer,
+    "handle_waiting_for_review": handle_waiting_for_review,
+    "bot_start": bot_start,
+    "call_command_cancel": call_command_cancel,
+    "call_command_help": call_command_help,
+    "call_command_info": call_command_info,
+    "call_command_register": call_command_register,
+    "bot_cancel": bot_cancel,
+    "call_cancel": call_cancel,
+    "send_player_sessions_keyboard": send_player_sessions_keyboard,
+    "bot_help": bot_help,
+    "bot_info": bot_info,
+    "send_info": send_info,
+    "bot_register": bot_register,
+    "call_register": call_register,
+    "send_sessions_keyboard": send_sessions_keyboard,
+    "call_arrived": call_arrived,
+    "call_finish": call_finish,
+    "call_select_point": call_select_point,
+    "send_choice_location": send_choice_location,
+    "handle_confirmation_callback": handle_confirmation_callback}
 
 
 def recover_players(player_id: int):

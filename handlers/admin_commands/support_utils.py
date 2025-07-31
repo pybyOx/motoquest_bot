@@ -41,7 +41,8 @@ def handle_cancel_or_back(**kwargs):
             bot.answer_callback_query(call.id, text="⬅️ Назад невозможно", show_alert=False)
 
 
-def reset_user_session(user_id, chat_id):
+def reset_user_session(user_id: int, chat_id: int) -> None:
+    """Очищает состояние пользователя, а также словари game_data, bot_messages и user_steps."""
     logging.info(f"\n\n___reset_user_session___")
     bot.delete_state(user_id, chat_id)
     game_data[user_id] = {}

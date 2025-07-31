@@ -1,19 +1,18 @@
 import logging
 from loader import bot
 from states.states_game import GameState
-from keyboards.inline.keyboards import review_keyboard
+from keyboards.inline_keyboards import review_keyboard
 from config_data.config import ADMIN_IDS
 from utils.decorators.with_context import with_context
 from utils.decorators.log_exceptions import log_exceptions
 from utils.misc.get_kwargs import get_kwargs
-from telebot.types import Message
 from telebot.apihelper import ApiTelegramException
 from peewee import DoesNotExist
 from utils.misc.exceptions import JSONError
 from datetime import datetime
-from utils.choice_location import send_choice_location
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from repositories.repositories import ClueRepository, UserPointProgressRepository
-from keyboards.inline.keyboards import clue_keyboard
+from keyboards.inline_keyboards import clue_keyboard
 
 
 @bot.message_handler(state=GameState.waiting_for_answer, content_types=['text', 'photo'])
@@ -80,7 +79,6 @@ def call_review(**kwargs):
     player = user_point_progress.player_session.player
     after_solved: dict = user_point_progress.point.after_solved
     point = user_point_progress.point
-    player_session = user_point_progress.player_session
     logging.debug(f"{player}: Получили UserPointProgress по id")
 
     if call.data.startswith("answer_correct:"):
@@ -107,7 +105,9 @@ def call_review(**kwargs):
 
         logging.debug(f"{player}:Отправлен ответ на правильное решение точки {point}.")
 
-        send_choice_location(player_session=player_session)
+        bot.send_message(chat_id, "Едем дальше?",
+                         reply_markup=InlineKeyboardMarkup().add(
+                             InlineKeyboardButton("Вперёд!", callback_data="choice_location")))
         logging.debug(f"{player}: отправлена клавиатура с оставшимися локациями.")
 
         bot.delete_state(player.user_id)

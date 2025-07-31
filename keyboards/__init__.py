@@ -1,2 +1,1 @@
-
-from . import inline
+from . import inline_keyboards

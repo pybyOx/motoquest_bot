@@ -1,7 +1,7 @@
 from loader import bot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.apihelper import ApiTelegramException
-from keyboards.inline.keyboards import objects_keyboard
+from keyboards.inline_keyboards import objects_keyboard
 from peewee import DoesNotExist
 from utils.decorators.log_exceptions import log_exceptions
 from utils.decorators.with_context import with_context
@@ -12,27 +12,29 @@ from states.states_game import GameState
 from datetime import datetime
 
 
-def send_choice_location(player_session):
+@bot.callback_query_handler(func=lambda callback: callback.data == "choice_location")
+@log_exceptions()
+@with_context(include_player_session=True)
+def send_choice_location(**kwargs) -> None:
     """Проверяет наличие незавершенных UserPointProgress игровой сессии и присылает клавиатуру с кнопками:
 
     - если есть: {Название локации}, callback_data="select_point: {id Point}"
     - если нет: {" 🎉"}, callback_data="finish"
-
-    :param player_session: Объект PlayerSession.
     """
     logging.info("\n\n___ send_choice_location ___")
 
-    user_id = player_session.player.user_id
+    user_id, chat_id, message_id, player_session = (
+        get_kwargs(["user_id", "chat_id", "message_id", "player_session"], kwargs))
 
     non_finished_progresses = UserPointProgressRepository.filter(player_session=player_session, is_finished=False)
     if not non_finished_progresses:
-        bot.send_message(user_id, "Поздравляем, вы прошли все испытания!",
-                         reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton(text=" 🎉 ",
-                                                                                      callback_data="finish")))
+        bot.edit_message_text("Поздравляем, вы прошли все испытания!", chat_id, message_id,
+                              reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton(text=" 🎉 ",
+                                                                                           callback_data="finish")))
     else:
-        bot.send_message(user_id, "Выберите локацию:",
-                         reply_markup=objects_keyboard(objects=non_finished_progresses,
-                                                       callback_data="select_point:"))
+        bot.edit_message_text("Выберите локацию:", chat_id, message_id,
+                              reply_markup=objects_keyboard(objects=non_finished_progresses,
+                                                            callback_data="select_point:"))
 
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith("select_point:"))
@@ -41,18 +43,15 @@ def send_choice_location(player_session):
 def call_select_point(**kwargs):
     logging.info("\n\n___ call_select_point ___")
 
-    call, chat_id, player, player_session = (get_kwargs(
-        ["message_or_callback", "chat_id", "player", "player_session"], kwargs))
-    message_id = call.message.message_id
+    call, message_id, chat_id, player, player_session = (get_kwargs(
+        ["message_or_callback", "message_id", "chat_id", "player", "player_session"], kwargs))
     point_id = int(call.data.split(":")[1])
 
     try:
         point = PointRepository.get(point_id=point_id)
-    except (DoesNotExist, ValueError) as error:
+    except (DoesNotExist, ValueError, Exception) as error:
         logging.error(f"При получении Point: {error}", exc_info=True)
-        bot.edit_message_text("Ошибка при получении информации о локации. Попробуйте позже.", chat_id, message_id,
-                              reply_markup=None)
-        return
+        raise
 
     logging.info(f"{player}: отправляется на точку {point}")
 
@@ -60,20 +59,19 @@ def call_select_point(**kwargs):
         PlayerSessionRepository.update_instance(player_session, current_point=point)
     except (ValueError, Exception) as error:
         logging.error(f"Ошибка обновления PlayerSessionRepository: {error}", exc_info=True)
-        bot.edit_message_text("Ошибка обновления текущей локации. Попробуйте позже.", chat_id, message_id,
-                              reply_markup=None)
-        return
+        raise
 
     logging.debug(f"{player_session}: {player_session.current_point}")
 
     bot.edit_message_text(f'Пункт назначения - {point.title}! \n'
                           f'Вот <a href="{point.location}">локация</a>.', chat_id, message_id,
                           parse_mode='HTML', disable_web_page_preview=True)
+
     bot.send_message(chat_id, "Когда прибудете на место, нажмите:",
                      reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton(text="Я на месте 🎉",
                                                                                   callback_data="arrived")))
 
-    logging.debug("Отправлена локация и кнопка <я на месте>")
+    logging.debug(f"{player}: Отправлена локация и кнопка <я на месте>")
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == "arrived")
@@ -109,14 +107,13 @@ def call_arrived(**kwargs):
                 bot.send_voice(chat_id=chat_id, voice=voice)
 
     except (KeyError, ApiTelegramException) as error:
-        bot.send_message(chat_id, "Произошла ошибка при загрузке информации о локации, пожалуйста подождите.")
         logging.error(f"При получении информации точки: {error}", exc_info=True)
-        return
-    else:
-        logging.debug(f"{player}: Отправлено задание точки {current_point}.")
+        raise
 
-        bot.set_state(player.user_id, GameState.waiting_for_answer, chat_id)
-        logging.debug(f"{player}: waiting_for_answer")
+    logging.debug(f"{player}: Отправлено задание точки {current_point}.")
+
+    bot.set_state(player.user_id, GameState.waiting_for_answer, chat_id)
+    logging.debug(f"{player}: waiting_for_answer")
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "finish")
@@ -138,7 +135,6 @@ def call_finish(**kwargs):
                          parse_mode="HTML")
     except (ApiTelegramException, Exception) as error:
         logging.error(f"{player}:При отправке информации о финальной точке: {error}", exc_info=True)
-        bot.send_message(chat_id, "Ошибка получения информации о финальной точке. Обратитесь к организатору")
-    else:
-        PlayerSessionRepository.update_instance(player_session, status="finished")
-        logging.debug(f"{player}:Информация о финальной точке успешно отправлена.")
+        raise
+    PlayerSessionRepository.update_instance(player_session, status="finished")
+    logging.debug(f"{player}:Информация о финальной точке успешно отправлена.")

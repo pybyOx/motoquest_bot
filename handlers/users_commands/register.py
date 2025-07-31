@@ -1,5 +1,4 @@
-from telebot.types import Message
-from keyboards.inline.keyboards import objects_keyboard
+from keyboards.inline_keyboards import objects_keyboard
 from loader import bot
 from peewee import DoesNotExist
 from utils.decorators.log_exceptions import log_exceptions
@@ -12,21 +11,25 @@ from repositories.repositories import GameSessionRepository, PlayerSessionReposi
 
 @bot.message_handler(commands=["register"])
 @log_exceptions()
-def bot_register(message: Message):
-    send_sessions_keyboard(message.chat.id)
+@with_context()
+def bot_register(**kwargs):
+    send_sessions_keyboard(kwargs['message_or_callback'])
 
 
-def send_sessions_keyboard(chat_id: int):
+@log_exceptions()
+@with_context()
+def send_sessions_keyboard(**kwargs):
     """
     Ищет активные игровые сессии.
 
     Если находит, отправляет клавиатуру с играми для записи;
     иначе отправляет сообщение о том, что активных сессий нет.
     """
+    chat_id = kwargs['chat_id']
 
     game_sessions = GameSessionRepository.filter(finished=False)
     if not game_sessions:
-        bot.send_message(chat_id, "Нет активных игровых сессий.")
+        bot.send_message(chat_id, "Нет игр для записи.")
         return
 
     bot.send_message(chat_id, f"Выбери игру, на которую хочешь записаться:",
@@ -47,20 +50,18 @@ def call_register(**kwargs):
     try:
         game_session = GameSessionRepository.get(session_id=session_id)
     except DoesNotExist as error:
-        bot.send_message(chat_id, "Ошибка получения данных. Пожалуйста, обратитесь к организатору.")
-        logging.critical(f"При получении GameSession: {error}", exc_info=True)
-        return
+        logging.error(f"При получении GameSession: {error}", exc_info=True)
+        raise
 
     try:
         PlayerSessionRepository.create(player=player, game_session=game_session)
     except CreationError as error:
-        bot.send_message(chat_id, "Ошибка записи на игру. Пожалуйста, обратитесь к организатору.")
-        logging.critical(f"При создании PlayerSession: {error}", exc_info=True)
-    except AlreadyExistsError as error:
+        logging.error(f"При создании PlayerSession: {error}", exc_info=True)
+        raise
+    except AlreadyExistsError:
         bot.send_message(chat_id, "Вы уже записаны на эту игру.")
-        logging.error(f"При записи на игру: {error}", exc_info=True)
-    else:
-        bot.send_message(chat_id, f"Отлично! Вы записаны на игру {game_session}!\n"
-                                  f"Место встречи: {game_session.location}", parse_mode="Markdown")
 
-        logging.debug(f"{player}: записался на игру {game_session}")
+    bot.send_message(chat_id, f"Отлично! Вы записаны на игру {game_session}!\n"
+                              f"Место встречи: {game_session.location}", parse_mode="Markdown")
+
+    logging.debug(f"{player}: записался на игру {game_session}")

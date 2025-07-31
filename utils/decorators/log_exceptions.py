@@ -23,9 +23,18 @@ def log_exceptions(level=logging.CRITICAL):
                 logging.error(f"{user_id}:Исключение в {func.__name__}", exc_info=True)
                 bot.send_message(ADMIN_IDS[0], f"{user_id}:Исключение в {func.__name__}")
 
-                bot.edit_message_text("Упс! Возникла ошибка. Мы уже исправляем 🛠️.\n "
-                                      "Как только всё будет готово, ты продолжишь с того же места.",
-                                      chat_id, message_id, reply_markup=None)
+                from telebot import TeleBot
+                from telebot.apihelper import ApiTelegramException
+
+                for msg_id in range(message_id + 1, message_id + 10):
+                    try:
+                        bot.delete_message(chat_id, msg_id)
+                    except (ApiTelegramException, Exception) as error:
+                        logging.error(f"При удалении сообщения {msg_id} : {error}")
+                        continue
+
+                bot.send_message(chat_id, "Упс! Возникла ошибка. Мы уже исправляем 🛠️.\n "
+                                          "Как только всё будет готово, ты продолжишь с того же места.")
                 try:
                     player = PlayerRepository.get(user_id=user_id)
                 except DoesNotExist:
