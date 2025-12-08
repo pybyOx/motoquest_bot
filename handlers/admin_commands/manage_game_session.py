@@ -17,8 +17,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 @bot.message_handler(commands=["manage_game"])
-@log_exceptions()
 @with_context()
+@log_exceptions()
 def manage_game_handler(**kwargs):
     logging.info(f"\n\n___manage_game_handler___")
     user_id, chat_id = get_kwargs(["user_id", "chat_id"], kwargs)
@@ -57,13 +57,13 @@ def show_sessions_selection(user_id, chat_id):
 @with_context()
 def manage_game_by_id(**kwargs):
     logging.info(f"\n\n___manage_game_by_id___")
-    call, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
-    session_id = int(call.data.split(":")[1])
+    data, user_id, chat_id, message_id = get_kwargs(["data", "user_id", "chat_id", "message_id"], kwargs)
+    session_id = int(data.split(":")[1])
 
     try:
         game_session = GameSessionRepository.get(session_id=session_id)
     except (DoesNotExist, Exception) as error:
-        bot.edit_message_text(f"Не найдена игра (id {session_id})", chat_id, call.message.message_id, reply_markup=None)
+        bot.edit_message_text(f"Не найдена игра (id {session_id})", chat_id, message_id, reply_markup=None)
         logging.error(f"При получении GameSession: {error}", exc_info=True)
         return
 
@@ -93,28 +93,27 @@ def show_action_step(user_id, chat_id, session_id):
 def call_manager(**kwargs):
     logging.info(f"\n\n___call_manager___")
 
-    call, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
-    callback_data = call.data
-    session_id = int(call.data.split(":")[1])
+    data, user_id, chat_id, message_id = get_kwargs(["data", "user_id", "chat_id", "message_id"], kwargs)
+    session_id = int(data.split(":")[1])
     try:
         game_session = GameSessionRepository.get(session_id=session_id)
     except (DoesNotExist, Exception) as error:
-        bot.edit_message_text(f"Не найдена игра (id {session_id})", chat_id, call.message.message_id, reply_markup=None)
+        bot.edit_message_text(f"Не найдена игра (id {session_id})", chat_id, message_id, reply_markup=None)
         logging.error(f"При получении GameSession: {error}", exc_info=True)
         return
 
     # === УДАЛЕНИЕ ИГРЫ ===
-    if callback_data.startswith("delete_game:"):
+    if data.startswith("delete_game:"):
         logging.debug(f"Удаление {game_session}")
-        msg = bot.edit_message_text(f"Удаление {game_session}", chat_id=chat_id, message_id=call.message.message_id,
+        msg = bot.edit_message_text(f"Удаление {game_session}", chat_id=chat_id, message_id=message_id,
                                     reply_markup=None)
         bot_messages[user_id].append(msg.message_id)
         delete_game_session(game_session, user_id=user_id)
 
     # === СТАРТ ИГРЫ ===
-    if callback_data.startswith("start_game:"):
+    if data.startswith("start_game:"):
         logging.debug(f"Старт {game_session}")
-        msg = bot.edit_message_text(f"Старт {game_session}", chat_id=chat_id, message_id=call.message.message_id,
+        msg = bot.edit_message_text(f"Старт {game_session}", chat_id=chat_id, message_id=message_id,
                                     reply_markup=None)
         bot_messages[user_id].append(msg.message_id)
         start_game_session(game_session, user_id=user_id)

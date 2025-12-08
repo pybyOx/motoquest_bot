@@ -19,6 +19,7 @@ def log_exceptions(level=logging.CRITICAL):
             except Exception:
                 message_id, user_id, chat_id, username = get_kwargs(
                     ["message_id", "user_id", "chat_id", "username"], kwargs)
+                logging.debug('Выполняется дальше')
                 current_state = bot.get_state(user_id, chat_id)
                 logging.error(f"{user_id}:Исключение в {func.__name__}", exc_info=True)
                 bot.send_message(ADMIN_IDS[0], f"{user_id}:Исключение в {func.__name__}")
@@ -30,7 +31,7 @@ def log_exceptions(level=logging.CRITICAL):
                     try:
                         bot.delete_message(chat_id, msg_id)
                     except (ApiTelegramException, Exception) as error:
-                        logging.error(f"При удалении сообщения {msg_id} : {error}")
+                        logging.debug(f"При удалении сообщения {msg_id} : {error}")
                         continue
 
                 bot.send_message(chat_id, "Упс! Возникла ошибка. Мы уже исправляем 🛠️.\n "

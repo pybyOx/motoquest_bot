@@ -102,7 +102,7 @@ class PlayerSession(BaseModel):
         )
 
     def __str__(self):
-        return (f"\n GameSession: {self.game_session} ({self.game_session.session_id})"
+        return (f"\n GameSession: {self.game_session} (id: {self.game_session.session_id})"
                 f"\n Player: {self.player}")
 
 

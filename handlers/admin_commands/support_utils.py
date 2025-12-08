@@ -13,9 +13,9 @@ user_steps = {}  # стек функций
 @with_context()
 def handle_cancel_or_back(**kwargs):
     logging.info(f"\n\n___handle_cancel_or_back___")
-    call, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
+    data, user_id, chat_id = get_kwargs(["data", "user_id", "chat_id"], kwargs)
 
-    if call.data == "cancel_action":
+    if data == "cancel_action":
         logging.debug("Отмена действия")
 
         bot.edit_message_text("🚫 Действие отменено.", chat_id, bot_messages[user_id][-1], reply_markup=None)
@@ -23,7 +23,7 @@ def handle_cancel_or_back(**kwargs):
 
         reset_user_session(user_id, chat_id)
 
-    elif call.data == "back":
+    elif data == "back":
         logging.debug("Шаг назад")
 
         for _ in range(2):
@@ -31,14 +31,11 @@ def handle_cancel_or_back(**kwargs):
             bot.delete_message(chat_id, message_id)
         logging.debug(f"Удалили два последних сообщения из bot_messages: {bot_messages[user_id]}")
 
-        if len(user_steps[user_id]) > 1:
-            user_steps[user_id].pop()
-            logging.debug(f"Удалили из user_steps последнюю функцию: {user_steps[user_id]}")
+        user_steps[user_id].pop()
+        logging.debug(f"Удалили из user_steps последнюю функцию: {user_steps[user_id]}")
 
-            func, args, kwargs = user_steps[user_id][-1]
-            func(*args, **kwargs)
-        else:
-            bot.answer_callback_query(call.id, text="⬅️ Назад невозможно", show_alert=False)
+        func, args, kwargs = user_steps[user_id][-1]
+        func(*args, **kwargs)
 
 
 def reset_user_session(user_id: int, chat_id: int) -> None:

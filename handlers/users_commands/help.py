@@ -4,8 +4,8 @@ from loader import bot
 
 
 @bot.message_handler(commands=["help"])
-@log_exceptions()
 @with_context()
+@log_exceptions()
 def bot_help(**kwargs):
 
     bot.send_message(kwargs['chat_id'], "🆘 *Нужна помощь?*\n\n"

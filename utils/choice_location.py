@@ -10,11 +10,12 @@ from utils.misc.get_kwargs import get_kwargs
 from repositories.repositories import (PointRepository, PlayerSessionRepository, UserPointProgressRepository)
 from states.states_game import GameState
 from datetime import datetime
+from handlers.custom_handlers.states_handlers import safe_set_state
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == "choice_location")
-@log_exceptions()
 @with_context(include_player_session=True)
+@log_exceptions()
 def send_choice_location(**kwargs) -> None:
     """Проверяет наличие незавершенных UserPointProgress игровой сессии и присылает клавиатуру с кнопками:
 
@@ -23,8 +24,8 @@ def send_choice_location(**kwargs) -> None:
     """
     logging.info("\n\n___ send_choice_location ___")
 
-    user_id, chat_id, message_id, player_session = (
-        get_kwargs(["user_id", "chat_id", "message_id", "player_session"], kwargs))
+    user_id, chat_id, message_id, player_session = (get_kwargs(
+        ["user_id", "chat_id", "message_id", "player_session"], kwargs))
 
     non_finished_progresses = UserPointProgressRepository.filter(player_session=player_session, is_finished=False)
     if not non_finished_progresses:
@@ -38,14 +39,14 @@ def send_choice_location(**kwargs) -> None:
 
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith("select_point:"))
-@log_exceptions()
 @with_context(include_player_session=True)
+@log_exceptions()
 def call_select_point(**kwargs):
     logging.info("\n\n___ call_select_point ___")
 
-    call, message_id, chat_id, player, player_session = (get_kwargs(
-        ["message_or_callback", "message_id", "chat_id", "player", "player_session"], kwargs))
-    point_id = int(call.data.split(":")[1])
+    data, message_id, chat_id, player, player_session = (get_kwargs(
+        ["data", "message_id", "chat_id", "player", "player_session"], kwargs))
+    point_id = int(data.split(":")[1])
 
     try:
         point = PointRepository.get(point_id=point_id)
@@ -75,16 +76,16 @@ def call_select_point(**kwargs):
 
 
 @bot.callback_query_handler(func=lambda callback: callback.data == "arrived")
-@log_exceptions()
 @with_context(include_user_point_progress=True)
+@log_exceptions()
 def call_arrived(**kwargs):
     logging.info("\n\n___ call_arrived ___")
 
-    call, chat_id, player, player_session, current_point, user_point_progress, clues_left = (get_kwargs(
-        ["message_or_callback", "chat_id", "player", "player_session", "current_point",
+    message_id, chat_id, player, player_session, current_point, user_point_progress, clues_left = (get_kwargs(
+        ["message_id", "chat_id", "player", "player_session", "current_point",
          "user_point_progress", "clues_left"], kwargs))
     task = current_point.task
-    bot.delete_message(chat_id, call.message.message_id)
+    bot.delete_message(chat_id, message_id)
 
     logging.info(f"{player}: прибыл на точку {current_point}")
 
@@ -112,27 +113,26 @@ def call_arrived(**kwargs):
 
     logging.debug(f"{player}: Отправлено задание точки {current_point}.")
 
-    bot.set_state(player.user_id, GameState.waiting_for_answer, chat_id)
-    logging.debug(f"{player}: waiting_for_answer")
+    safe_set_state(player.user_id, GameState.waiting_for_answer, chat_id)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "finish")
-@log_exceptions()
 @with_context(include_player_session=True)
+@log_exceptions()
 def call_finish(**kwargs):
     logging.info(f"\n\n___ call_finish ___")
 
-    call, player, chat_id, player_session = (
-        get_kwargs(["message_or_callback", "player", "chat_id", "player_session"], kwargs))
+    message_id, player, chat_id, player_session = (
+        get_kwargs(["message_id", "player", "chat_id", "player_session"], kwargs))
     finish_data = player_session.game_session.game_info.finish
     logging.info(f"{player}: вышел в финал.")
 
-    bot.edit_message_reply_markup(chat_id=chat_id, message_id=call.message.message_id, reply_markup=None)
+    bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
 
     try:
         bot.send_message(chat_id,
                          f"{finish_data['value']}\n\n📍 <a href=\"{finish_data['location']}\">Открыть локацию</a>",
-                         parse_mode="HTML")
+                         parse_mode="HTML", disable_web_page_preview=True)
     except (ApiTelegramException, Exception) as error:
         logging.error(f"{player}:При отправке информации о финальной точке: {error}", exc_info=True)
         raise

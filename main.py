@@ -1,4 +1,4 @@
-from utils.misc import logger
+import utils.misc.logger
 import logging
 from loader import bot
 import handlers  # noqa
@@ -8,6 +8,7 @@ import atexit
 
 
 if __name__ == "__main__":
+    logging.debug("Начало")
     setup_db()
     create_models()
     bot.add_custom_filter(StateFilter(bot))

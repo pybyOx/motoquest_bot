@@ -2,6 +2,7 @@ from functools import wraps
 import logging
 from peewee import DoesNotExist
 from repositories.repositories import (PlayerRepository, UserPointProgressRepository)
+from telebot.types import Message, CallbackQuery
 
 
 def with_context(include_player=False, include_player_session=False, include_user_point_progress=False):
@@ -12,8 +13,9 @@ def with_context(include_player=False, include_player_session=False, include_use
     - user_id : int
     - username : str
     - chat_id : int
-    - message_or_callback: Message | Callback
+    - data: str | list[PhotoSize] | None
     - message_id: int
+    - content_type: str | None
 
     include_player = True:
     -------------
@@ -36,49 +38,70 @@ def with_context(include_player=False, include_player_session=False, include_use
         include_player = True
 
     def decorator(handler):
+
         @wraps(handler)
-        def wrapper(message_or_callback, *args, **kwargs):
-            user_id = message_or_callback.from_user.id
-            username = message_or_callback.from_user.full_name
-            if hasattr(message_or_callback, 'chat'):
-                chat_id = message_or_callback.chat.id
-            else:
-                chat_id = message_or_callback.message.chat.id
-            if hasattr(message_or_callback, 'message'):
-                message_id = message_or_callback.message.message_id
-            else:
-                message_id = message_or_callback.message_id
-            kwargs.update(user_id=user_id, username=username, chat_id=chat_id,
-                          message_or_callback=message_or_callback, message_id=message_id)
+        def wrapper(*args, **kwargs):
+            if not kwargs:  # значит вызов первичный и нужно определять kwargs
+                if args:
+                    message_or_callback: Message | CallbackQuery = args[0]
+                    args = args[1:]
+                else:
+                    raise ValueError("message_or_callback is required")
 
-            if include_player:
-                try:
-                    player = PlayerRepository.get(user_id=user_id)
-                except DoesNotExist:
-                    player = PlayerRepository.create(user_id=user_id, username=username)
-                kwargs.update(player=player)
+                user_id = message_or_callback.from_user.id
+                username = message_or_callback.from_user.full_name
 
-                if include_player_session:
-                    player_session = player.current_player_session
-                    if not player_session:
-                        raise ValueError(f"{player}: отсутствует current_player_session")
+                if isinstance(message_or_callback, Message):
+                    message = message_or_callback
+                    message_id = message.message_id
+                    chat_id = message.chat.id
+                    content_type = message.content_type
+                    if content_type == "text":
+                        data = message.text
+                    elif content_type == "photo":
+                        data = message.photo
+                    else:
+                        data = None
 
-                    current_point = player_session.current_point
-                    if not current_point:
-                        raise ValueError(f"{player_session}: отсутствует current_point")
+                elif isinstance(message_or_callback, CallbackQuery):
+                    call = message_or_callback
+                    message_id = call.message.message_id
+                    chat_id = call.message.chat.id
+                    content_type = None
+                    data = call.data
+                else:
+                    raise ValueError("Неверный тип message_or_callback")
 
-                    kwargs.update(player_session=player_session, current_point=current_point)
+                kwargs.update(user_id=user_id, username=username, chat_id=chat_id, message_id=message_id, data=data,
+                              content_type=content_type)
 
-                    if include_user_point_progress:
-                        try:
-                            user_point_progress = UserPointProgressRepository.get(player_session=player_session,
-                                                                                  point=current_point)
-                        except DoesNotExist as error:
-                            logging.error(f" При получении UserPointProgress: {error}", exc_info=True)
-                            raise
+                if include_player:
+                    try:
+                        player = PlayerRepository.get(user_id=user_id)
+                    except DoesNotExist:
+                        player = PlayerRepository.create(user_id=user_id, username=username)
+                    kwargs.update(player=player)
 
-                        clues_left = 3 - user_point_progress.clues_used
-                        kwargs.update(user_point_progress=user_point_progress, clues_left=clues_left)
+                    if include_player_session:
+                        player_session = player.current_player_session
+                        if not player_session:
+                            raise ValueError(f"{player}: отсутствует current_player_session")
+
+                        current_point = player_session.current_point
+
+                        kwargs.update(player_session=player_session, current_point=current_point)
+
+                        if include_user_point_progress:
+                            try:
+                                user_point_progress = UserPointProgressRepository.get(player_session=player_session,
+                                                                                      point=current_point)
+                            except DoesNotExist as error:
+                                logging.error(f" При получении UserPointProgress: {error}", exc_info=True)
+                                raise
+
+                            clues_left = 3 - user_point_progress.clues_used
+                            kwargs.update(user_point_progress=user_point_progress, clues_left=clues_left)
+
             return handler(*args, **kwargs)
         return wrapper
     return decorator

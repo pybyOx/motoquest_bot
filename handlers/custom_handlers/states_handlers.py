@@ -16,13 +16,12 @@ from keyboards.inline_keyboards import clue_keyboard
 
 
 @bot.message_handler(state=GameState.waiting_for_answer, content_types=['text', 'photo'])
-@log_exceptions()
 @with_context(include_user_point_progress=True)
+@log_exceptions()
 def handle_user_answer(**kwargs) -> None:
 
-    message_or_callback, user_id, chat_id, player, current_point, user_point_progress = (
-        get_kwargs(["message_or_callback", "user_id", "chat_id", "player", "current_point", "user_point_progress"],
-                   kwargs))
+    content_type, user_id, chat_id, player, current_point, user_point_progress, data = (get_kwargs(
+        ["content_type", "user_id", "chat_id", "player", "current_point", "user_point_progress", "data"], kwargs))
 
     logging.info(f"\n\n___{player}: отправил ответ на задание точки {current_point} ___")
 
@@ -32,14 +31,14 @@ def handle_user_answer(**kwargs) -> None:
 
         keyboard = review_keyboard(user_point_progress.user_point_progress_id)
 
-        if message_or_callback.content_type == 'text':
+        if content_type == 'text':
             bot.send_message(ADMIN_IDS[0], admin_msg)
-            bot.send_message(ADMIN_IDS[0], message_or_callback.text, reply_markup=keyboard)
-        elif message_or_callback.content_type == 'photo':
-            bot.send_photo(ADMIN_IDS[0], message_or_callback.photo[-1].file_id, caption=admin_msg, reply_markup=keyboard)
+            bot.send_message(ADMIN_IDS[0], data, reply_markup=keyboard)
+        elif content_type == 'photo':
+            bot.send_photo(ADMIN_IDS[0], data[-1].file_id, caption=admin_msg, reply_markup=keyboard)
         else:
             bot.send_message(chat_id, "В качестве ответа пришлите текст или фото.")
-            raise TypeError(f"{player}: отправил ответ неверного формата {message_or_callback.content_type}")
+            raise TypeError(f"{player}: отправил ответ неверного формата {content_type}")
 
     except (TypeError, ValueError, AttributeError, KeyError, IndexError, ApiTelegramException, Exception) as error:
         logging.error(f"При отправлении ответа админу: {error}", exc_info=True)
@@ -48,27 +47,28 @@ def handle_user_answer(**kwargs) -> None:
         bot.send_message(chat_id, "Ответ получен. Ожидайте проверки.")
         logging.debug(f"{player}: ответ отправлен на проверку.")
 
-        bot.set_state(user_id, GameState.waiting_for_review, chat_id)
-        logging.info(f"\n\n___{player}: waiting_for_review___")
+        safe_set_state(user_id, GameState.waiting_for_review, chat_id)
 
 
 @bot.message_handler(state=GameState.waiting_for_review)
-@log_exceptions()
 @with_context()
+@log_exceptions()
 def handle_waiting_for_review(**kwargs) -> None:
-    chat_id = get_kwargs(["user_id"], kwargs)[0]
+
+    chat_id, user_id = get_kwargs(["chat_id", "user_id"], kwargs)
+
     bot.send_message(chat_id, "Ваш ответ отправлен на проверку. Ожидайте.")
 
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith(("answer_correct:", "answer_wrong:")))
-@log_exceptions()
 @with_context()
+@log_exceptions()
 def call_review(**kwargs):
     logging.info(f"\n\n___ call_review ___")
 
-    user_id, chat_id, call = (get_kwargs(["user_id", "chat_id", "message_or_callback"], kwargs))
-    user_point_progress_id = int(call.data.split(":")[1])
-    bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
+    user_id, chat_id, message_id, data = (get_kwargs(["user_id", "chat_id", "message_id", "data"], kwargs))
+    user_point_progress_id = int(data.split(":")[1])
+    bot.edit_message_reply_markup(chat_id, message_id, reply_markup=None)
 
     try:
         user_point_progress = UserPointProgressRepository.get(user_point_progress_id=user_point_progress_id)
@@ -81,8 +81,9 @@ def call_review(**kwargs):
     point = user_point_progress.point
     logging.debug(f"{player}: Получили UserPointProgress по id")
 
-    if call.data.startswith("answer_correct:"):
+    if data.startswith("answer_correct:"):
         logging.info(f"\n\n___{player}: ответ верный.___")
+
         bot.send_message(chat_id, "Верно")
         try:
             UserPointProgressRepository.update_instance(instance=user_point_progress,
@@ -105,18 +106,19 @@ def call_review(**kwargs):
 
         logging.debug(f"{player}:Отправлен ответ на правильное решение точки {point}.")
 
-        bot.send_message(chat_id, "Едем дальше?",
+        bot.send_message(player.user_id, "Едем дальше?",
                          reply_markup=InlineKeyboardMarkup().add(
                              InlineKeyboardButton("Вперёд!", callback_data="choice_location")))
         logging.debug(f"{player}: отправлена клавиатура с оставшимися локациями.")
 
         bot.delete_state(player.user_id)
 
-    if call.data.startswith("answer_wrong:"):
+    if data.startswith("answer_wrong:"):
         logging.info(f"\n\n___{player}: ответ неверный.___")
+
         bot.send_message(chat_id, "Неверно")
-        bot.set_state(player.user_id, GameState.waiting_for_answer, chat_id)
-        logging.info(f"{player}: waiting_for_answer")
+
+        safe_set_state(player.user_id, GameState.waiting_for_answer, player.user_id)
 
         bot.send_message(player.user_id, "\u274C Ответ неверный. Попробуйте ещё раз или воспользуйтесь подсказкой.",
                          reply_markup=clue_keyboard(3 - user_point_progress.clues_used))
@@ -124,15 +126,16 @@ def call_review(**kwargs):
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "get_clue")
-@log_exceptions()
 @with_context(include_user_point_progress=True)
+@log_exceptions()
 def call_get_clue(**kwargs):
     logging.info(f"\n\n___ call_get_clue ___")
 
-    call, player, chat_id, current_point, user_point_progress, clues_left = (get_kwargs(
-        ["message_or_callback", "player", "chat_id", "current_point", "user_point_progress", "clues_left"], kwargs))
+    message_id, player, chat_id, current_point, user_point_progress, clues_left = (get_kwargs(
+        ["message_id", "player", "chat_id", "current_point", "user_point_progress", "clues_left"], kwargs))
+
     logging.info(f"{player}: воспользовался подсказкой.")
-    bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+    bot.delete_message(chat_id=chat_id, message_id=message_id)
 
     try:
         clues = ClueRepository.filter(point=current_point)
@@ -150,3 +153,11 @@ def call_get_clue(**kwargs):
     if user_point_progress.clues_used < 3:
         new_value = user_point_progress.clues_used + 1
         UserPointProgressRepository.update_instance(user_point_progress, clues_used=new_value)
+
+
+def safe_set_state(user_id, state, chat_id):
+    logging.debug(f"\n\nМеняем состояние {user_id}, {chat_id}")
+    before = bot.get_state(user_id, chat_id)
+    bot.set_state(user_id, state, chat_id)
+    after = bot.get_state(user_id, chat_id)
+    logging.debug(f"{user_id}: состояние изменилось {before} → {after}")

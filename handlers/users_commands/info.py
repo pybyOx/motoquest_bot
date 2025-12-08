@@ -3,17 +3,16 @@ from utils.decorators.with_context import with_context
 from loader import bot
 from utils.misc.get_kwargs import get_kwargs
 from repositories.repositories import PlayerSessionRepository
+from telebot.types import Message
 
 
 @bot.message_handler(commands=["info"])
-@log_exceptions()
-@with_context()
-def bot_info(**kwargs):
-    send_info(kwargs['message_or_callback'])
+def bot_info(message: Message):
+    send_info(message)
 
 
-@log_exceptions()
 @with_context(include_player=True)
+@log_exceptions()
 def send_info(**kwargs):
     chat_id, player = get_kwargs(["chat_id", "player"], kwargs)
 
@@ -25,8 +24,8 @@ def send_info(**kwargs):
     text = 'Вы записаны на:'
     for player_session in player_sessions:
         game_session = player_session.game_session
-        text += f'\n\n\t{game_session}\nЛокация: {game_session.location}'
-    bot.send_message(chat_id, text)
+        text += f'\n\n\t{game_session} {game_session.location}'
+    bot.send_message(chat_id, text, parse_mode="HTML", disable_web_page_preview=True)
 
     # bot.send_message(user_id, "Статистика по пройденным играм:")
     # try:

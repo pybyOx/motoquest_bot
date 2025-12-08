@@ -27,16 +27,15 @@ def ask_confirmation(question="Вы уверены?"):
 @log_exceptions()
 @with_context()
 def handle_confirmation_callback(**kwargs):
-    callback, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
-    message_id = callback.message.message_id
+    message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
 
     if user_id not in user_confirmations:
-        bot.answer_callback_query(callback.id, "Нет ожидающего действия.")
+        bot.edit_message_text("Нет ожидающего действия.", chat_id, message_id, reply_markup=None)
         return
 
     bot.delete_message(chat_id, message_id)
 
-    if callback.data == "confirm_yes":
+    if data == "confirm_yes":
         func, args, kwargs = user_confirmations.pop(user_id)
 
         func(*args, **kwargs)

@@ -1,12 +1,11 @@
 import json
 import sys
-from utils.misc.exceptions import CreationError, AlreadyExistsError, CliInputError
+from utils.misc.exceptions import CreationError, AlreadyExistsError, CliInputError, JSONError
 from utils.cli.supporting_func.check_data import (get_data_from_argv, check_file_exists,
                                                   is_correct_data_from_json)
 import logging
 from json import JSONDecodeError
 from repositories.repositories import GameInfoRepository, PointRepository, ClueRepository
-from utils.misc.exceptions import JSONError
 
 
 if __name__ == "__main__":
@@ -39,7 +38,7 @@ if __name__ == "__main__":
         logging.debug("Данные из JSON-файла успешно извлечены.")
 
     try:
-        is_correct_data_from_json(data=game_data, required_keys={"title", "finish", "points"})
+        is_correct_data_from_json(data=game_data)
     except JSONError as error:
         logging.error(f"В извлеченных данных есть некорректные значения: {error}")
         sys.exit(1)

@@ -1,6 +1,5 @@
 import sys
-from utils.misc.exceptions import CliInputError
-from utils.misc.exceptions import JSONError
+from utils.misc.exceptions import CliInputError, JSONError
 import os
 import re
 
@@ -24,42 +23,112 @@ def get_data_from_argv(length: int, index: int) -> str:
 
 def require_keys(required_keys: set, data: dict):
     """
-    Проверяет наличие ключей в словаре.
+    Проверяет наличие обязательных ключей в словаре и то, что их значения непустые.
 
-    :param required_keys: Ключи, которые должны быть в словаре.
-    :param data: Словарь, который нужно проверить.
-    :raises KeyError: Если в словаре отсутствуют необходимые ключи.
+    :param required_keys: Множество ключей, которые должны присутствовать.
+    :param data: Словарь для проверки.
+    :raises KeyError: Если ключ отсутствует.
+    :raises ValueError: Если значение ключа пустое (None, пустая строка/список/словарь).
     """
 
-    missing_keys = required_keys - data.keys()
+    missing_keys = required_keys.difference(data.keys())
     if missing_keys:
         raise KeyError(f"В словаре отсутствуют ключи: {', '.join(missing_keys)}")
 
+    for key in required_keys:
+        value = data[key]
+        if value is None:
+            raise ValueError(f"В словаре отсутствует значение ключа '{key}'")
 
-def is_correct_data_from_json(data: dict, required_keys: set):
+        if isinstance(value, (str, list, dict, tuple)) and not value:
+            raise ValueError(f"Значение ключа '{key}' не может быть пустым")
+
+
+def is_correct_data_from_json(data: dict):
     """Проверяет корректность данных, извлеченных из json-файла игры.
     :param data: Словарь, подлежащий проверке.
-    :param required_keys: Ключи, которые должны быть в словаре.
     :raises JSONError: Ошибка в данных json-файла"""
     try:
-        require_keys(required_keys=required_keys, data=data)
-        for key in data.keys():
-            if key == "location":
-                if not is_map_link(data[key]):
-                    raise ValueError(f"Некорректная ссылка на локацию в {key}")
-            if isinstance(data[key], dict):
-                if "location" in data[key]:
-                    if not is_map_link(data[key]["location"]):
-                        raise ValueError(f"Некорректная ссылка на локацию в {key}")
-                if "photo" in data[key]:
-                    check_file_exists(data[key]["photo"])
-                if "voice" in data[key]:
-                    check_file_exists(data[key]["voice"])
-            if isinstance(data[key], list):
-                for obj in data[key]:
-                    if isinstance(obj, dict):
-                        is_correct_data_from_json(obj, {"title", "location", "task", "answer", "clues", "after_solved"})
-    except (KeyError, FileNotFoundError, ValueError) as e:
+        require_keys({"title", "finish", "points"}, data)
+
+        if not isinstance(data["title"], str) or not data["title"].strip():
+            raise ValueError(f"Некорректные данные: Поле 'title' должно быть непустой строкой.")
+
+        points = data["points"]
+        if not isinstance(points, dict) or not points:
+            raise ValueError(f"Некорректные данные: поле 'points' должно быть непустым словарем.")
+
+        for point_name, point_data in points.items():
+            if not isinstance(point_name, str) or not point_name.strip():
+                raise ValueError("Некорректные данные: Название точки должно быть непустой строкой.")
+            if not isinstance(point_data, dict) or not point_data:
+                raise ValueError(f"Некорректные данные: points[{point_name}] должно быть непустым словарем.")
+
+            require_keys({"location", "task", "answer", "clues", "after_solved"}, point_data)
+
+            for key, value in point_data.items():
+
+                if key == "clues":
+                    if not isinstance(value, list):
+                        raise TypeError(f"{point_name}[clues] должен быть списком.")
+
+                    if len(value) != 3:
+                        raise ValueError(f"Некорректные данные: {point_name}[clues] должен содержать 3 подсказки.")
+
+                    if not all(isinstance(clue, str) for clue in value):
+                        raise TypeError(f"{point_name}[clues] должен содержать строки.")
+
+                else:
+                    if not isinstance(value, dict):
+                        raise TypeError(f"{point_name}[{key}] должен быть словарем.")
+
+                    if key == "location":
+                        require_keys({"link"}, value)
+
+                    elif key in {"task", "after_solved"}:
+                        require_keys({"text"}, value)
+
+                    elif key == "answer":
+                        require_keys({"type", "value"}, value)
+
+                        for attr in {"type", "value"}:
+                            if not isinstance(value[attr], str):
+                                raise TypeError(f"{point_name}[answer][{attr}] должен быть строкой.")
+
+                        if value["type"] not in ["text", "photo"]:
+                            raise ValueError(f"Некорректные данные:{point_name}[answer][type] должен быть 'text'/'photo'")
+
+                if "text" in value:
+                    if not isinstance(value["text"], str):
+                        raise TypeError(f"{point_name}[{key}][text] должно быть строкой.")
+
+                if "facts" in value:
+                    if not isinstance(value["facts"], list):
+                        raise TypeError(f"{point_name}[{key}][facts] должен быть списком.")
+                    if not all(isinstance(fact, str) for fact in value["facts"]):
+                        raise TypeError(f"{point_name}[{key}][facts] должен содержать строки.")
+
+                if "link" in value:
+                    if not is_map_link(value["link"]):
+                        raise ValueError(f"Некорректная ссылка: {point_name}[{key}][link]")
+
+                for attr in {"image", "voice"}:
+                    if attr in value:
+                        if not isinstance(value[attr], str):
+                            raise TypeError(f"{point_name}[{key}][{attr}] должен быть строкой.")
+                        check_file_exists(value[attr])
+
+        if not isinstance(data["finish"], dict):
+            raise TypeError(f"Поле 'finish' должно быть словарем.")
+        require_keys({"text", "link"}, data["finish"])
+
+        if not isinstance(data["finish"]["text"], str):
+            raise TypeError(f"[finish][text] должно быть строкой.")
+
+        if not is_map_link(data["finish"]["link"]):
+            raise ValueError(f"Некорректная ссылка в [finish][link]")
+
+    except (KeyError, FileNotFoundError, ValueError, TypeError) as e:
         raise JSONError(f"{e}")
 
 

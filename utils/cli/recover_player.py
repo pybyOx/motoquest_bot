@@ -6,12 +6,11 @@ from repositories.repositories import PlayerRepository
 from handlers.admin_commands.manage_game_session import manage_game_handler
 from handlers.custom_handlers.states_handlers import (call_get_clue, call_review, handle_user_answer,
                                                       handle_waiting_for_review)
-from handlers.default_commands.start import (bot_start, call_command_cancel, call_command_help, call_command_info,
-                                             call_command_register)
-from handlers.users_commands.cancel import bot_cancel, call_cancel, send_player_sessions_keyboard
+from handlers.default_commands.start import bot_start
+from handlers.users_commands.cancel import call_cancel, send_player_sessions_keyboard
 from handlers.users_commands.help import bot_help
-from handlers.users_commands.info import bot_info, send_info
-from handlers.users_commands.register import bot_register, call_register, send_sessions_keyboard
+from handlers.users_commands.info import send_info
+from handlers.users_commands.register import call_register, send_sessions_keyboard
 from utils.choice_location import call_arrived, call_finish, call_select_point, send_choice_location
 from utils.decorators.ask_confirmation import handle_confirmation_callback
 
@@ -22,17 +21,10 @@ recovery_map = {
     "handle_user_answer": handle_user_answer,
     "handle_waiting_for_review": handle_waiting_for_review,
     "bot_start": bot_start,
-    "call_command_cancel": call_command_cancel,
-    "call_command_help": call_command_help,
-    "call_command_info": call_command_info,
-    "call_command_register": call_command_register,
-    "bot_cancel": bot_cancel,
     "call_cancel": call_cancel,
     "send_player_sessions_keyboard": send_player_sessions_keyboard,
     "bot_help": bot_help,
-    "bot_info": bot_info,
     "send_info": send_info,
-    "bot_register": bot_register,
     "call_register": call_register,
     "send_sessions_keyboard": send_sessions_keyboard,
     "call_arrived": call_arrived,
@@ -52,6 +44,8 @@ def recover_players(player_id: int):
     bot.delete_state(player_id)
     func_name = next(iter(func_data))
     func_obj = recovery_map.get(func_name)
+    if not func_obj:
+        raise ValueError(f"Функция {func_name} не найдена в recovery_map")
     args, kwargs = func_data[func_name]
 
     func_obj(*args, **kwargs)

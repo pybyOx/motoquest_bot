@@ -18,7 +18,7 @@ from handlers.admin_commands.support_utils import reset_user_session, user_steps
 @with_context()
 def create_game_handler(**kwargs):
     logging.info(f"\n\n___create_game_handler___")
-    message, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
+    user_id, chat_id = get_kwargs(["user_id", "chat_id"], kwargs)
 
     if user_id not in ADMIN_IDS:
         bot.send_message(chat_id, "⛔ Только для администраторов.")
@@ -54,10 +54,10 @@ def show_game_selection(user_id, chat_id):
 def handle_game(**kwargs):
     logging.info(f"\n\n___handle_game___")
 
-    call, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
+    data, user_id, chat_id = get_kwargs(["data", "user_id", "chat_id"], kwargs)
 
     try:
-        game_info = GameInfoRepository.get(game_id=int(call.data.split(":")[1]))
+        game_info = GameInfoRepository.get(game_id=int(data.split(":")[1]))
 
     except (DoesNotExist, Exception) as error:
         bot.send_message(chat_id, "Ошибка получения игры по этому id.")
@@ -93,10 +93,10 @@ def show_city_step(user_id, chat_id):
 def handle_city(**kwargs):
     logging.info(f"\n\n___handle_city___")
 
-    call, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
+    data, user_id, chat_id = get_kwargs(["data", "user_id", "chat_id"], kwargs)
 
     city_map = {"nha_trang": "Нячанг", "hanoi": "Ханой"}
-    city = city_map.get(call.data.split(":")[1], "Неизвестно")
+    city = city_map.get(data.split(":")[1], "Неизвестно")
     game_data[user_id]["city"] = city
     logging.debug(f"Обновили game_data: {game_data[user_id]}")
 
@@ -128,18 +128,17 @@ def ask_location(user_id, chat_id):
 def receive_location(**kwargs):
     logging.info(f"\n\n___receive_location___")
 
-    message, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
+    message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
 
-    if not is_map_link(message.text.strip()):
+    if not is_map_link(data.strip()):
         try:
-            bot.delete_message(chat_id, message.message_id)
+            bot.delete_message(chat_id, message_id)
         except Exception:
             pass
-        message = bot.send_message(chat_id, "Некорректная ссылка, попробуйте еще раз.")
-        bot.delete_message(chat_id, message.message_id)
+        bot.send_message(chat_id, "Некорректная ссылка, попробуйте еще раз.")
         return
 
-    game_data[user_id]["location"] = f"📍 [Открыть локацию на карте]({message.text.strip()})"
+    game_data[user_id]["location"] = f'<a href="{data.strip()}">[Место встречи]</a>'
     logging.debug(f"Обновили game_data: {game_data[user_id]}")
 
     bot.edit_message_reply_markup(chat_id, bot_messages[user_id][-1], reply_markup=None)
@@ -170,13 +169,12 @@ def ask_date(user_id, chat_id):
 def receive_date(**kwargs):
     logging.info(f"\n\n___receive_date___")
 
-    message, user_id, chat_id = get_kwargs(["message_or_callback", "user_id", "chat_id"], kwargs)
+    message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
 
     try:
-        date = datetime.strptime(message.text.strip(), "%d.%m.%Y %H:%M")
+        date = datetime.strptime(data.strip(), "%d.%m.%Y %H:%M")
     except ValueError:
-        message = bot.send_message(chat_id, "Неверный формат. Попробуй ещё раз: ДД.ММ.ГГГГ ЧЧ:ММ")
-        bot.delete_message(chat_id, message.message_id)
+        bot.send_message(chat_id, "Неверный формат. Попробуй ещё раз: ДД.ММ.ГГГГ ЧЧ:ММ")
         return
 
     bot.edit_message_reply_markup(chat_id, bot_messages[user_id][-1], reply_markup=None)
