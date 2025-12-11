@@ -1,11 +1,12 @@
 import json
 import sys
-from utils.misc.exceptions import CreationError, AlreadyExistsError, CliInputError, JSONError
+from utils.misc.exceptions import CreationError, AlreadyExistsError, CliInputError
 from utils.cli.supporting_func.check_data import (get_data_from_argv, check_file_exists,
-                                                  is_correct_data_from_json)
+                                                  validate_game_json, validate_media_files)
 import logging
 from json import JSONDecodeError
 from repositories.repositories import GameInfoRepository, PointRepository, ClueRepository
+from pathlib import Path
 
 
 if __name__ == "__main__":
@@ -38,12 +39,13 @@ if __name__ == "__main__":
         logging.debug("Данные из JSON-файла успешно извлечены.")
 
     try:
-        is_correct_data_from_json(data=game_data)
-    except JSONError as error:
-        logging.error(f"В извлеченных данных есть некорректные значения: {error}")
+        validate_game_json(data=game_data)
+        validate_media_files(game_data, Path(file_path).parent)
+    except (ValueError, FileNotFoundError) as error:
+        logging.error(f"Ошибка в данных игры: {error}")
         sys.exit(1)
     else:
-        logging.debug("Данные корректны.")
+        logging.debug("JSON и файлы прошли валидацию.")
 
     try:
         game_info = GameInfoRepository.create(title=game_data["title"],
