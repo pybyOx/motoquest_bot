@@ -85,7 +85,7 @@ Google Maps, Yandex Maps, OSM, Bing, Telegram
                 "location": {
                   "link": "https://maps.google.com/...",
                   "text": "Описание места",
-                  "voice": "media/audio/location1.mp3",
+                  "audio": "media/audio/location1.mp3",
                   "image": "media/images/location1.jpg"
                 }
 
@@ -93,21 +93,21 @@ Google Maps, Yandex Maps, OSM, Bing, Telegram
 
                 "task": {
                   "text": "Найдите табличку на здании",
-                  "voice": "media/audio/task1.mp3"
+                  "audio": "media/audio/task1.mp3"
                 }
 
         ✅ answer — правильный ответ
 
                 "answer": {
                   "type": "text",
-                  "value": "1912"
+                  "text": "1912"
                 }
 
                 или
 
                 "answer": {
                   "type": "photo",
-                  "value": "на фото должна быть табличка здания"
+                  "text": "на фото должна быть табличка здания"
                 }
 
         ✅ clues — подсказки (строго 3 ❗)
@@ -131,13 +131,3 @@ Google Maps, Yandex Maps, OSM, Bing, Telegram
           "text": "Поздравляем! Вы прошли весь квест!",
           "link": "https://maps.google.com/..."
         }
-
-
-
-
-
-
-
-
-P.S.
-    ⚠️game.schema.json — схема проверки (редактировать не нужно)

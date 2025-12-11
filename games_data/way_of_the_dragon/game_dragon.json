@@ -2,7 +2,7 @@
   "title": "Путь дракона",
   "finish": {
     "text": "Поздравляем, вы прошли игру.",
-    "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
+    "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
   },
   "points": [
     {
@@ -10,16 +10,16 @@
       "location": {
         "text": "описание выбранной локации",
         "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
-        "voice": "путь к голосовому",
-        "image": "путь к картинке"
+        "audio": "media/audio/morse.ogg",
+        "image": "media/images/1.png"
       },
       "task": {
-        "photo": "games_data/way_of_the_dragon/photos/1.png",
-        "value": "Задание 1"
+        "image": "media/images/1.png",
+        "text": "Задание 1"
       },
       "answer": {
         "type": "text",
-        "value": "2 июля 1976"
+        "text": "2 июля 1976"
       },
       "clues": [
         "Дух Дракона помнит времена, когда люди были едины. Найдите след этого единства.",
@@ -27,20 +27,19 @@
         "2 июля 1976 — день, когда судьбы слились в одно."
       ],
       "after_solved": {
-        "value": "Молодец 1",
-        "facts": "Факты 1"
+        "text": "Молодец 1"
       }
     },
     {
       "title": "Доброта",
       "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
       "task": {
-        "photo": "games_data/way_of_the_dragon/photos/2.png",
-        "value": "Задание 2"
+        "image": "media/images/2.png",
+        "text": "Задание 2"
       },
       "answer": {
         "type": "photo",
-        "value": "фото с торговцем"
+        "text": "фото с торговцем"
       },
       "clues": [
         "Найди ЛЮБОГО торговца, сидящего на земле, и сделай искренний жест — купи что-нибудь.",
@@ -48,20 +47,21 @@
         "Если не знаешь, где искать — поищи в окрестностях рынка Чо Дам."
       ],
       "after_solved": {
-        "value": "Молодец 2",
-        "facts": "Факты 2"
+        "text": "Молодец 2"
       }
     },
     {
       "title": "Память",
-      "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
+      "location": {
+        "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
+      },
       "task": {
-        "photo": "games_data/way_of_the_dragon/photos/3.png",
-        "value": "Задание 3"
+        "image": "media/images/3.png",
+        "text": "Задание 3"
       },
       "answer": {
         "type": "text",
-        "value": "память дарует бессмертие"
+        "text": "память дарует бессмертие"
       },
       "clues": [
         "Слова из прошлого скрыты в простом смещении. Вглядись внимательнее — порядок букв не так случаен.",
@@ -69,20 +69,21 @@
         "Шифр Цезаря. Сдвиг +9. Расшифруй: «шихзые мищьны йнъъхнщысн» — это «память дарует бессмертие"
       ],
       "after_solved": {
-        "value": "Молодец 3",
-        "facts": "Факты 3"
+        "text": "Молодец 3"
       }
     },
     {
       "title": "Мудрость",
-      "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
+      "location": {
+        "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
+      },
       "task": {
-        "photo": "games_data/way_of_the_dragon/photos/4.png",
-        "value": "Задание 4"
+        "image": "media/images/4.png",
+        "text": "Задание 4"
     },
       "answer": {
         "type": "text",
-        "value": "ОСОЗНАНИЕ"
+        "text": "ОСОЗНАНИЕ"
       },
       "clues": [
         "Найди символы и попробуй сопоставить их в правильном порядке — это ключ к разгадке.",
@@ -90,20 +91,21 @@
         "Символы ! \" № % — это не просто знаки, они заменяют цифры с клавиатуры ПК."
       ],
       "after_solved": {
-        "value": "Молодец 4",
-        "facts": "Факты 4"
+        "text": "Молодец 4"
       }
     },
     {
       "title": "Баланс",
-      "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
+      "location": {
+        "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
+      },
       "task": {
-        "photo": "games_data/way_of_the_dragon/photos/5.png",
-        "value": "Задание 5"
+        "photo": "media/images/5.png",
+        "text": "Задание 5"
       },
       "answer": {
         "type": "photo",
-        "value": "фото башни из камней"
+        "text": "фото башни из камней"
       },
       "clues": [
         "9 камней — 9 ступеней пути. Построй башню и зафиксируй момент.",
@@ -111,21 +113,22 @@
         "Инь-янь — круг, в котором одна часть светла, другая темна. Он хранится в парке неподалёку."
       ],
       "after_solved": {
-        "value": "Молодец 5",
-        "facts": "Факты 5"
+        "text": "Молодец 5"
       }
     },
     {
       "title": "Хранитель",
-      "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
+      "location": {
+        "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
+      },
       "task": {
-        "photo": "games_data/way_of_the_dragon/photos/6.png",
-        "value": "Задание 6",
-        "voice": "games_data/way_of_the_dragon/voices/morse.ogg"
+        "image": "media/images/6.png",
+        "text": "Задание 6",
+        "audio": "media/audio/morse.ogg"
       },
       "answer": {
         "type": "text",
-        "value": "цени свое время"
+        "text": "цени свое время"
       },
       "clues": [
         "Узкий переулок в центре.",
@@ -133,20 +136,21 @@
         "Кафе прямо у рельсов."
       ],
       "after_solved": {
-        "value": "Молодец 6",
-        "facts": "Факты 6"
+        "text": "Молодец 6"
       }
     },
     {
       "title": "Любовь",
-      "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
+      "location": {
+        "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
+      },
       "task": {
-        "photo": "games_data/way_of_the_dragon/photos/7.png",
-        "value": "Задание 7"
+        "image": "media/images/7.png",
+        "text": "Задание 7"
       },
       "answer": {
         "type": "photo",
-        "value": "фото хокку"
+        "text": "фото хокку"
       },
       "clues": [
         "Узкий переулок в центре.",
@@ -154,8 +158,7 @@
         "Кафе прямо у рельсов."
       ],
       "after_solved": {
-        "value": "Молодец 7",
-        "facts": "Факты 7"
+        "text": "Молодец 7"
       }
     }
   ]

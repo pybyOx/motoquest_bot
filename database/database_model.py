@@ -17,7 +17,7 @@ class GameInfo(BaseModel):
     """Общая информация об игре."""
     game_id = AutoField()
     title = CharField(unique=True)
-    finish = JSONField()  # {"text": "text", "location": "..."}
+    finish = JSONField()  # keys: REQ - "text", "link"
 
     def __str__(self):
         return f"{self.title}"
@@ -27,16 +27,16 @@ class Point(BaseModel):
     """Информация о точках игры."""
     point_id = AutoField()
     title = CharField()
-    location = CharField()
+    location = JSONField()  # keys: REQ - "link"; OPT - "text", "voice", "image"
 
-    task = JSONField()  # {"photo": "photos/1.png", "type": "text" | "audio", "value": "..." }
-    answer = JSONField()  # {"type": "text" | "photo" | "text_photo", "value": "..."}
-    after_solved = JSONField()  # {"type": "text" | "audio", "value": "..." }
+    task = JSONField()  # keys: REQ - "text"; OPT - "voice", "image"
+    answer = JSONField()  # keys: REQ - "text", "type"
+    after_solved = JSONField()  # keys: REQ - "text"; OPT - "voice", "image"
 
     game_info = ForeignKeyField(GameInfo, backref="points", on_delete="CASCADE")  # GameInfo.points — все точки игры
 
     def __str__(self):
-        return f"{self.title or 'point'} ({self.game_info.title})"
+        return f"{self.title} ({self.game_info.title})"
 
 
 class Clue(BaseModel):
