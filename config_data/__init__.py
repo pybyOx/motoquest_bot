@@ -1,1 +1,1 @@
-from . import config
+from . import config, game_schema
