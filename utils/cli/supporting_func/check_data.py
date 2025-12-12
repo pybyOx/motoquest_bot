@@ -1,9 +1,10 @@
 import sys
 from utils.misc.exceptions import CliInputError
-import os
+import logging
 from pathlib import Path
 from jsonschema import Draft202012Validator
 from config_data.game_schema import SCHEMA
+import requests
 
 
 def get_data_from_argv(length: int, index: int) -> str:
@@ -23,6 +24,14 @@ def get_data_from_argv(length: int, index: int) -> str:
     return data
 
 
+def is_url_accessible(url: str, timeout: float = 5.0) -> bool:
+    try:
+        response = requests.get(url, allow_redirects=True, timeout=timeout, stream=True)
+        return 200 <= response.status_code < 400
+    except requests.RequestException:
+        return False
+
+
 def validate_game_json(data: dict):
     """Проверяет корректность данных, извлеченных из json-файла игры.
     :param data: Словарь, подлежащий проверке.
@@ -36,21 +45,11 @@ def validate_game_json(data: dict):
         raise ValueError("JSON не прошёл валидацию")
 
 
-def check_file_exists(file_path: str) -> None:
-    """
-    Проверяет, существует ли файл по указанному пути.
-
-    :param file_path: Путь к файлу
-    :raises FileNotFoundError: Если файл не найден
-    """
-    if not os.path.isfile(file_path):
-        raise FileNotFoundError(f"Файл по пути {file_path} не найден.")
-
-
 def validate_media_files(data, game_root: Path) -> None:
     """
     Рекурсивно проходит по данным и проверяет,
-    что все пути указывают на реально существующие файлы.
+    что все пути указывают на реально существующие файлы,
+    что ссылки на карты рабочие.
     """
 
     if isinstance(data, dict):
@@ -60,6 +59,9 @@ def validate_media_files(data, game_root: Path) -> None:
                 file_path = game_root / value
                 if not file_path.is_file():
                     raise FileNotFoundError(f"Файл не найден: {file_path}")
+            elif key == "link":
+                if not is_url_accessible(value):
+                    logging.warning(f"Ссылка на карту может быть недоступна: {value} ")
 
             else:
                 validate_media_files(value, game_root)
