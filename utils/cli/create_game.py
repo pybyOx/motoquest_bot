@@ -1,7 +1,7 @@
 import json
 import sys
 from utils.misc.exceptions import CreationError, AlreadyExistsError, CliInputError
-from utils.cli.supporting_func.check_data import (get_data_from_argv, check_file_exists,
+from utils.cli.supporting_func.check_data import (get_data_from_argv,
                                                   validate_game_json, validate_media_files)
 import logging
 from json import JSONDecodeError
@@ -19,8 +19,9 @@ if __name__ == "__main__":
     game_info = None
 
     try:
-        file_path = get_data_from_argv(length=2, index=1)
-        check_file_exists(file_path)
+        file_path = Path(get_data_from_argv(length=2, index=1))
+        if not file_path.is_file():
+            raise FileNotFoundError(f"Файл не найден: {file_path}")
 
     except (CliInputError, IndexError, FileNotFoundError) as error:
         logging.error(f"При получении пути к файлу: {error}", exc_info=True)
