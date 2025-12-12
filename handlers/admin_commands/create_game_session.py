@@ -10,7 +10,7 @@ from repositories.repositories import GameInfoRepository, GameSessionRepository
 from utils.misc.exceptions import AlreadyExistsError, CreationError
 import logging
 from keyboards.inline_keyboards import cancel_or_back_keyboard, city_keyboard, combine_keyboards, objects_keyboard
-from utils.cli.supporting_func.check_data import is_map_link
+from utils.cli.supporting_func.check_data import is_url_accessible
 from handlers.admin_commands.support_utils import reset_user_session, user_steps, bot_messages, game_data
 
 
@@ -130,7 +130,7 @@ def receive_location(**kwargs):
 
     message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
 
-    if not is_map_link(data.strip()):
+    if not is_url_accessible(data.strip()):
         try:
             bot.delete_message(chat_id, message_id)
         except Exception:
