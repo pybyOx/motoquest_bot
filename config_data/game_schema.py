@@ -7,7 +7,7 @@ SCHEMA = {
     "required": ["title", "points", "finish"],
     "properties": {
         "title": {"description": "Название игры",
-                  "$ref": "#/$defs/audioPath"},
+                  "$ref": "#/$defs/title"},
         "points": {"description": "Точки игры",
                    "type": "array",
                    "items": {"$ref": "#/$defs/point"},
@@ -43,7 +43,7 @@ SCHEMA = {
                                           "minLength": 1
                                           },
                                  "link": {"$ref": "#/$defs/linkPath"},
-                                 "voice": {"$ref": "#/$defs/audioPath"},
+                                 "audio": {"$ref": "#/$defs/audioPath"},
                                  "image": {"$ref": "#/$defs/imagePath"}
                              },
                              "additionalProperties": False
@@ -55,7 +55,7 @@ SCHEMA = {
                              "text": {"description": "Текст задания",
                                       "type": "string",
                                       "minLength": 1},
-                             "voice": {"$ref": "#/$defs/audioPath"},
+                             "audio": {"$ref": "#/$defs/audioPath"},
                              "image": {"$ref": "#/$defs/imagePath"}
                          },
                          "additionalProperties": False
@@ -89,7 +89,7 @@ SCHEMA = {
                                      "text": {"description": "Сообщение после правильного ответа",
                                               "type": "string",
                                               "minLength": 1},
-                                     "voice": {"$ref": "#/$defs/audioPath"},
+                                     "audio": {"$ref": "#/$defs/audioPath"},
                                      "image": {"$ref": "#/$defs/imagePath"}
                                  },
                                  "additionalProperties": False

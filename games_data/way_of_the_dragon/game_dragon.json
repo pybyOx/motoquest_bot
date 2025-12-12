@@ -32,7 +32,9 @@
     },
     {
       "title": "Доброта",
-      "location": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D",
+      "location": {
+        "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
+      },
       "task": {
         "image": "media/images/2.png",
         "text": "Задание 2"
@@ -100,7 +102,7 @@
         "link": "https://www.google.com/maps/place/Tooru+Coffee/@12.269007,109.2034387,17.5z/data=!4m6!3m5!1s0x3170679044fd21d1:0x665685739680236a!8m2!3d12.2700568!4d109.2052746!16s%2Fg%2F11qzx7z8fm?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D"
       },
       "task": {
-        "photo": "media/images/5.png",
+        "image": "media/images/5.png",
         "text": "Задание 5"
       },
       "answer": {
