@@ -131,3 +131,13 @@ Google Maps, Yandex Maps, OSM, Bing, Telegram
           "text": "Поздравляем! Вы прошли весь квест!",
           "link": "https://maps.google.com/..."
         }
+
+        ВНЕСЕНИЕ В БАЗУ ДАННЫХ
+
+После заполнения json-файла, в терминале введите команду:
+python -m utils.cli.create_game games_data/название папки с игрой/название файла.json
+Пример:
+python -m utils.cli.create_game games_data/way_of_the_dragon/game_dragon.json
+
+Если файл пройдет проверку - данные игры внесутся в базу данных,
+иначе - см. консоль где ошибка
