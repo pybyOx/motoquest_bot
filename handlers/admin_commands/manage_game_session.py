@@ -1,6 +1,6 @@
 from loader import bot
 from config_data.config import ADMIN_IDS
-from database.database_model import GameSession, UserPointProgress
+from database.database_model import GameSession, db
 from repositories.repositories import (GameSessionRepository, PlayerSessionRepository, UserPointProgressRepository,
                                        PlayerRepository)
 from utils.decorators.with_context import with_context
@@ -14,6 +14,9 @@ from utils.misc.exceptions import CreationError, AlreadyExistsError, DeletionErr
 import logging
 from handlers.admin_commands.support_utils import user_steps, reset_user_session, bot_messages
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from events.player_event_types import PlayerEventType
+from domain.player_events import do_event_once
+from functools import partial
 
 
 @bot.message_handler(commands=["manage_game"])
@@ -144,62 +147,39 @@ def delete_game_session(game_session: GameSession, user_id: int):
 def start_game_session(game_session: GameSession, user_id: int):
     logging.info(f"\n\n___start_game_session___")
 
-    for player_session in game_session.player_sessions:
-        creation_failed = False  # флаг для ошибки
-
-        for point in game_session.game_info.points:
-
-            try:
-
-                UserPointProgressRepository.create(player_session=player_session, point=point)
-
-            except AlreadyExistsError:
-
-                logging.error(f"UserPointProgress уже существует. Пробуем пересоздать."
-                              f"\n player_session: ({player_session.player_session_id})"
-                              f"\n point: ({point}) ", exc_info=True)
-
-                try:
-                    UserPointProgressRepository.delete((UserPointProgress.player_session == player_session) &
-                                                       (UserPointProgress.point == point))
+    try:
+        with db.atomic():
+            for player_session in game_session.player_sessions:
+                for point in game_session.game_info.points:
                     UserPointProgressRepository.create(player_session=player_session, point=point)
-                except Exception as e:
-                    logging.error(f"Не удалось пересоздать UserPointProgress: {e}", exc_info=True)
-                    creation_failed = True
-                    break
-                else:
-                    logging.debug("UserPointProgress пересоздан.")
+                PlayerSessionRepository.update_instance(player_session, status="started")
+                PlayerRepository.update_instance(player_session.player, current_player_session=player_session)
 
-            except CreationError as e:
+    except AlreadyExistsError:
+        logging.error("UserPointProgress уже существует при старте игры", exc_info=True)
+        bot.send_message(user_id, "⚠️ Игра уже была начата или данные старта уже существуют.")
+        return
 
-                logging.error(f"Ошибка создания UserPointProgress."
-                              f"\n player_session: ({player_session.player_session_id})"
-                              f"\n point: ({point}) "
-                              f"\n error: {e}", exc_info=True)
-                try:
-                    UserPointProgressRepository.delete(UserPointProgress.player_session == player_session)
-                except (DoesNotExist, DeletionError) as error:
-                    logging.error(f"При удалении UserPointProgress: {error}", exc_info=True)
+    except CreationError as e:
+        logging.error(f"Ошибка создания прогресса при старте игры"
+                      f"\n(game_session={game_session})"
+                      f"\nerror: {e}",
+                      exc_info=True)
+        bot.send_message(user_id, "❌ Не удалось запустить игру. Попробуйте позже.")
+        return
 
-                creation_failed = True
-                break
-
-        if creation_failed:
-            bot.send_message(user_id, f"Не удалось создать прогресс по точкам для {player_session}")
-            logging.debug(f"Не удалось создать прогресс по точкам для {player_session}")
-            continue
-
-        player = player_session.player
-
-        PlayerSessionRepository.update_instance(player_session, status="started")
-        logging.debug(f"{player}:Поменяли статус для {player_session} на started")
-
-        PlayerRepository.update_instance(player, current_player_session=player_session)
-        logging.debug(f"{player}: current_player_session - {player_session} ")
-
-        bot.send_message(player.user_id, "🏁 Игра началась!",
-                         reply_markup=InlineKeyboardMarkup().add(InlineKeyboardButton(text=" Поехали! ",
-                                                                                      callback_data="choice_location")))
-        logging.debug(f"{player}: отправили сообщение о начале игры с кнопкой <поехали>")
+    send_start_game_messages(tuple(game_session.player_sessions))
 
     bot.edit_message_text(f"✅ Игра '{game_session}' успешно стартовала.", user_id, bot_messages[user_id][-1])
+
+
+def send_start_game_messages(player_sessions: tuple):
+    keyboard = InlineKeyboardMarkup().add(InlineKeyboardButton(text=" Поехали! ",
+                                                               callback_data="choice_location"))
+    for player_session in player_sessions:
+        do_event_once(player_session, PlayerEventType.START_MESSAGE_SENT,
+                      partial(bot.send_message,
+                              player_session.player.user_id,
+                              "🏁 Игра началась!",
+                              reply_markup=keyboard)
+                      )
