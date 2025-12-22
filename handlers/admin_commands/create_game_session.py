@@ -5,13 +5,15 @@ from utils.decorators.ask_confirmation import ask_confirmation
 from utils.misc.get_kwargs import get_kwargs
 from config_data.config import ADMIN_IDS
 from states.states_game import CreateGameStates
-from datetime import datetime
+from datetime import datetime, UTC
+from zoneinfo import ZoneInfo
 from repositories.repositories import GameInfoRepository, GameSessionRepository
 from utils.misc.exceptions import AlreadyExistsError, CreationError
 import logging
 from keyboards.inline_keyboards import cancel_or_back_keyboard, city_keyboard, combine_keyboards, objects_keyboard
 from utils.cli.supporting_func.check_data import is_url_accessible
 from handlers.admin_commands.support_utils import reset_user_session, user_steps, bot_messages, game_data
+from config_data.cities import CITIES
 
 
 @bot.message_handler(commands=["create_game"])
@@ -40,9 +42,9 @@ def show_game_selection(user_id, chat_id):
     except DoesNotExist:
         bot.send_message(chat_id, "Объектов GameInfo не найдено")
     else:
-
-        msg = bot.send_message(chat_id, "Выберите игру:", reply_markup=combine_keyboards(
-            objects_keyboard(games, "create_game:"), cancel_or_back_keyboard(False)))
+        keyboard = combine_keyboards(objects_keyboard(objects=games, callback_data="create_game:"),
+                                     cancel_or_back_keyboard(False))
+        msg = bot.send_message(chat_id, "Выберите игру:", reply_markup=keyboard)
         logging.debug(f"Отправили выбор игры")
 
         bot_messages[user_id].append(msg.message_id)
@@ -62,6 +64,8 @@ def handle_game(**kwargs):
     except (DoesNotExist, Exception) as error:
         bot.send_message(chat_id, "Ошибка получения игры по этому id.")
         logging.error(f"При получении GameInfo: {error}", exc_info=True)
+        func, args, kwargs = user_steps[user_id].pop()
+        func(*args, **kwargs)
 
     else:
         game_data[user_id]["game_info"] = game_info
@@ -95,12 +99,12 @@ def handle_city(**kwargs):
 
     data, user_id, chat_id = get_kwargs(["data", "user_id", "chat_id"], kwargs)
 
-    city_map = {"nha_trang": "Нячанг", "hanoi": "Ханой"}
-    city = city_map.get(data.split(":")[1], "Неизвестно")
-    game_data[user_id]["city"] = city
+    city_data = CITIES.get(data.split(":")[1])
+    game_data[user_id]["city"] = city_data["title"]
+    game_data[user_id]["timezone"] = city_data["timezone"]
     logging.debug(f"Обновили game_data: {game_data[user_id]}")
 
-    bot.edit_message_text(text=f"Город: {city}", chat_id=chat_id,
+    bot.edit_message_text(text=f"Город: {city_data["title"]}", chat_id=chat_id,
                           message_id=bot_messages[user_id][-1], reply_markup=None)
     logging.debug(f"Заменили вопрос с выбором города на ответ.")
 
@@ -113,7 +117,7 @@ def ask_location(user_id, chat_id):
     user_steps[user_id].append((ask_location, (user_id, chat_id), {}))
     logging.debug(f"Добавили в user_steps: {user_steps[user_id]}")
 
-    msg = bot.send_message(chat_id, "Введите место встречи:", reply_markup=cancel_or_back_keyboard())
+    msg = bot.send_message(chat_id, "Введите ссылку на место встречи:", reply_markup=cancel_or_back_keyboard())
     logging.debug(f"Отправили выбор места встречи")
 
     bot_messages[user_id].append(msg.message_id)
@@ -129,8 +133,8 @@ def receive_location(**kwargs):
     logging.info(f"\n\n___receive_location___")
 
     message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
-
-    if not is_url_accessible(data.strip()):
+    location_url = data.strip()
+    if not is_url_accessible(location_url):
         try:
             bot.delete_message(chat_id, message_id)
         except Exception:
@@ -141,8 +145,8 @@ def receive_location(**kwargs):
     game_data[user_id]["location"] = f'<a href="{data.strip()}">[Место встречи]</a>'
     logging.debug(f"Обновили game_data: {game_data[user_id]}")
 
-    bot.edit_message_reply_markup(chat_id, bot_messages[user_id][-1], reply_markup=None)
-    logging.debug(f"В вопросе с выбором города удалили клавиатуру.")
+    bot.edit_message_text(f"Место встречи:", chat_id, bot_messages[user_id][-1], reply_markup=None)
+    logging.debug(f"В вопросе с выбором локации удалили клавиатуру.")
 
     ask_date(user_id, chat_id)
 
@@ -172,7 +176,8 @@ def receive_date(**kwargs):
     message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
 
     try:
-        date = datetime.strptime(data.strip(), "%d.%m.%Y %H:%M")
+        local_dt = datetime.strptime(data.strip(), "%d.%m.%Y %H:%M")
+        dt_utc = local_dt.replace(tzinfo=ZoneInfo(game_data[user_id]["timezone"])).astimezone(UTC)
     except ValueError:
         bot.send_message(chat_id, "Неверный формат. Попробуй ещё раз: ДД.ММ.ГГГГ ЧЧ:ММ")
         return
@@ -183,15 +188,17 @@ def receive_date(**kwargs):
     create_game_session(user_id=user_id, chat_id=chat_id,
                         game_info=game_data[user_id]["game_info"],
                         city=game_data[user_id]["city"],
+                        timezone=game_data[user_id]["timezone"],
                         location=game_data[user_id]["location"],
-                        date=date)
+                        date=dt_utc)
 
 
 @ask_confirmation("Все верно?")
-def create_game_session(user_id, chat_id, game_info, city, location, date):
+def create_game_session(user_id, chat_id, game_info, city, timezone, location, date):
     logging.info(f"\n\n___create_game_session___")
     try:
-        session = GameSessionRepository.create(game_info=game_info, city=city, location=location, date=date)
+        session = GameSessionRepository.create(game_info=game_info, city=city, location=location,
+                                               date=date, timezone=timezone)
     except AlreadyExistsError:
         bot.send_message(chat_id, "GameSession с такими данными уже существует.")
     except CreationError as error:

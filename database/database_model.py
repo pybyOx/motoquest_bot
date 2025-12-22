@@ -1,7 +1,7 @@
 from peewee import (Model, CharField, IntegerField, DateTimeField, TextField, BooleanField, AutoField,
                     ForeignKeyField, DeferredForeignKey)
 from playhouse.sqlite_ext import SqliteExtDatabase, JSONField
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import cast
 
 
@@ -55,6 +55,7 @@ class GameSession(BaseModel):
     city = CharField(null=True)  # город проведения игры
     location = CharField()  # место встречи
     date = DateTimeField()  # время встречи
+    timezone = CharField(null=True)
     finished = BooleanField(default=False)  # если будет нужно завершить вручную
 
     class Meta:
@@ -64,13 +65,13 @@ class GameSession(BaseModel):
     @property
     def is_finished(self) -> bool:
         """Завершена ли игра: вручную или по дате."""
-        return self.finished or self.date < datetime.now()
+        return self.finished or self.date < datetime.now(UTC)
 
     def __str__(self):
         date = cast(datetime, self.date)
         date_str = f"{date.strftime('%d.%m.%Y %H:%M')}"
         city_str = f"📍 {self.city}" if self.city else ""
-        return f"{self.game_info.title} {city_str} ({date_str})"
+        return f"{self.game_info.title} {city_str} \n({date_str})"
     
 
 class Player(BaseModel):
@@ -131,9 +132,24 @@ class UserPointProgress(BaseModel):
             (('player_session', 'point'), True),
         )
 
+    def __str__(self):
+        return (f"\n UserPointProgress: {self.player_session}"
+                f"\n Point: {self.point}")
+
+
+class PlayerEvent(BaseModel):
+    player_session = ForeignKeyField(PlayerSession, backref="events", on_delete="CASCADE")
+    event_type = CharField()
+    created_at = DateTimeField(default=lambda: datetime.now(UTC))
+
+    class Meta:
+        indexes = (
+            (("player_session", "event_type"), True),
+        )
+
 
 def create_models():
-    db.create_tables([GameInfo, Point, Clue,  GameSession, Player, PlayerSession, UserPointProgress],
+    db.create_tables([GameInfo, Point, Clue,  GameSession, Player, PlayerSession, UserPointProgress, PlayerEvent],
                      safe=True)
 
 
