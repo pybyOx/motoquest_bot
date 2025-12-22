@@ -122,9 +122,9 @@ def objects_keyboard(objects: ModelSelect, callback_data: str, row_width: int = 
     :raises TypeError: Объекты выборки games не являются объектами классов
     GameSession / GameInfo / PlayerSession / UserPointProgress.
     """
-    callback_data_list = ["register:", "manage_game:", "create_game:", "cancel:", "select_point:"]
-    if callback_data not in callback_data_list:
-        raise ValueError(f"Аргумент callback_data должен соответствовать одному из значений {callback_data_list}")
+    if callback_data not in ("register:", "manage_game:", "create_game:", "cancel:", "select_point:"):
+        raise ValueError(f'Аргумент callback_data должен соответствовать одному из значений: '
+                         f'"register:", "manage_game:", "create_game:", "cancel:", "select_point:"')
 
     markup = InlineKeyboardMarkup(row_width=row_width)
 
