@@ -4,12 +4,18 @@ from utils.misc.get_kwargs import get_kwargs
 import logging
 
 
-game_data = {}  # для хранения информации об игре
+game_data = {}
+# Хранение информации об игре   { "user_id": {   "city": str,
+#                                                "game_info": GameInfo,
+#                                                "location": str,
+#                                                "timezone": str    }   }
+
 bot_messages = {}  # для хранения сообщений от бота
-user_steps = {}  # стек функций
+user_steps = {}  # Стек функций создания GameSession для возможности возвращения к предыдущему шагу.
+#                  { "user_id": [(func, args, kwargs),  ]   }
 
 
-@bot.callback_query_handler(func=lambda call: call.data in ["cancel_action", "back"])
+@bot.callback_query_handler(func=lambda call: call.data in ("cancel_action", "back"))
 @with_context()
 def handle_cancel_or_back(**kwargs):
     logging.info(f"\n\n___handle_cancel_or_back___")
