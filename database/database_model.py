@@ -70,8 +70,9 @@ class GameSession(BaseModel):
 
     def __str__(self):
         date_utc = cast(datetime, self.date)
-        if self.timezone:
-            local_dt = date_utc.astimezone(ZoneInfo(self.timezone))
+        timezone = cast(str | None, self.timezone)
+        if timezone:
+            local_dt = date_utc.astimezone(ZoneInfo(timezone))
         else:
             local_dt = date_utc
         date_str = local_dt.strftime("%d.%m.%Y %H:%M")
@@ -85,7 +86,7 @@ class Player(BaseModel):
     current_player_session = DeferredForeignKey("PlayerSession", null=True, backref='current_players',
                                                 deferrable='INITIALLY DEFERRED', on_delete="SET NULL")
     # PlayerSession.current_players — все Player с конкретным PlayerSession
-    current_func = JSONField(null=True)
+    current_func = JSONField(null=True)  # current_func = {"func.__name__": [args, kwargs]}
 
     def __str__(self):
         return f"{self.username or 'user'} ({self.user_id})"
