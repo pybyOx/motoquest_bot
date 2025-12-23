@@ -6,30 +6,38 @@ from telebot.types import Message, CallbackQuery
 
 
 def with_context(include_player=False, include_player_session=False, include_user_point_progress=False):
-    """Декоратор, извлекающий из message или callback:
+    """Декоратор, дополняющий kwargs хендлера нормализованным контекстом сообщения Telegram.
 
-    Общие данные:
+    Извлекает данные из telebot.types.Message и приводит их
+    к единому, предсказуемому формату для использования в хендлерах.
+
+    Добавляемые параметры в kwargs:
     ------------
-    - user_id : int
-    - username : str
-    - chat_id : int
-    - data: str | list[PhotoSize] | None
-    - message_id: int
-    - content_type: str | None
+    - message_id (int): идентификатор сообщения Telegram.
+    - user_id (int): идентификатор пользователя Telegram.
+    - chat_id (int): идентификатор чата Telegram.
+    - username (str | None): username пользователя.
+    - content_type (str): тип сообщения (message.content_type) или "callback".
+    - data:
+            * str — если content_type == 'text'
+            * List[PhotoSize] — если content_type == 'photo'
+            * None — для всех остальных типов сообщений
+
+    Дополнительные параметры (в зависимости от аргументов декоратора):
 
     include_player = True:
     -------------
-    - player : Player
+    - player (Player): Игрок.
 
     include_player_session = True:
     -------------
-    - player_session : PlayerSession (текущая сессия игрока со статусом started)
-    - current_point : Point
+    - player_session (PlayerSession): Текущая игровая сессия игрока.
+    - current_point (Point): Текущая точка игры.
 
     include_user_point_progress = True:
     -------------
-    - user_point_progress : UserPointProgress (прогресс по точке)
-    - clues_left : int (количество оставшихся подсказок)"""
+    - user_point_progress (UserPointProgress): Прогресс по точке.
+    - clues_left (int): Количество оставшихся подсказок."""
 
     if include_user_point_progress:
         include_player = True
@@ -67,7 +75,7 @@ def with_context(include_player=False, include_player_session=False, include_use
                     call = message_or_callback
                     message_id = call.message.message_id
                     chat_id = call.message.chat.id
-                    content_type = None
+                    content_type = "callback"
                     data = call.data
                 else:
                     raise ValueError("Неверный тип message_or_callback")
