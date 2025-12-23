@@ -19,7 +19,7 @@ user_steps = {}  # Стек функций создания GameSession для �
 @with_context()
 def handle_cancel_or_back(**kwargs):
     logging.info(f"\n\n___handle_cancel_or_back___")
-    data, user_id, chat_id = get_kwargs(["data", "user_id", "chat_id"], kwargs)
+    data, user_id, chat_id = get_kwargs(("data", "user_id", "chat_id"), kwargs)
 
     if data == "cancel_action":
         logging.debug("Отмена действия")

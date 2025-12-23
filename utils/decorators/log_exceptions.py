@@ -18,7 +18,7 @@ def log_exceptions(level=logging.CRITICAL):
                 return func(*args, **kwargs)
             except Exception:
                 message_id, user_id, chat_id, username = get_kwargs(
-                    ["message_id", "user_id", "chat_id", "username"], kwargs)
+                    ("message_id", "user_id", "chat_id", "username"), kwargs)
                 logging.debug('Выполняется дальше')
                 current_state = bot.get_state(user_id, chat_id)
                 logging.error(f"{user_id}:Исключение в {func.__name__}", exc_info=True)

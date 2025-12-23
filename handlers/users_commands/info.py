@@ -14,7 +14,7 @@ def bot_info(message: Message):
 @with_context(include_player=True)
 @log_exceptions()
 def send_info(**kwargs):
-    chat_id, player = get_kwargs(["chat_id", "player"], kwargs)
+    chat_id, player = get_kwargs(("chat_id", "player"), kwargs)
 
     player_sessions = PlayerSessionRepository.filter(player=player, status="registered")
     if not player_sessions:

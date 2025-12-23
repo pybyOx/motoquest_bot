@@ -25,7 +25,7 @@ def send_choice_location(**kwargs) -> None:
     logging.info("\n\n___ send_choice_location ___")
 
     user_id, chat_id, message_id, player_session = (get_kwargs(
-        ["user_id", "chat_id", "message_id", "player_session"], kwargs))
+        ("user_id", "chat_id", "message_id", "player_session"), kwargs))
 
     non_finished_progresses = UserPointProgressRepository.filter(player_session=player_session, is_finished=False)
     if not non_finished_progresses:
@@ -45,7 +45,7 @@ def call_select_point(**kwargs):
     logging.info("\n\n___ call_select_point ___")
 
     data, message_id, chat_id, player, player_session = (get_kwargs(
-        ["data", "message_id", "chat_id", "player", "player_session"], kwargs))
+        ("data", "message_id", "chat_id", "player", "player_session"), kwargs))
     point_id = int(data.split(":")[1])
 
     try:
@@ -82,8 +82,8 @@ def call_arrived(**kwargs):
     logging.info("\n\n___ call_arrived ___")
 
     message_id, chat_id, player, player_session, current_point, user_point_progress, clues_left = (get_kwargs(
-        ["message_id", "chat_id", "player", "player_session", "current_point",
-         "user_point_progress", "clues_left"], kwargs))
+        ("message_id", "chat_id", "player", "player_session", "current_point",
+         "user_point_progress", "clues_left"), kwargs))
     task = current_point.task
     bot.delete_message(chat_id, message_id)
 
@@ -123,7 +123,7 @@ def call_finish(**kwargs):
     logging.info(f"\n\n___ call_finish ___")
 
     message_id, player, chat_id, player_session = (
-        get_kwargs(["message_id", "player", "chat_id", "player_session"], kwargs))
+        get_kwargs(("message_id", "player", "chat_id", "player_session"), kwargs))
     finish_data = player_session.game_session.game_info.finish
     logging.info(f"{player}: вышел в финал.")
 

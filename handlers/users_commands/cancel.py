@@ -17,7 +17,7 @@ def bot_cancel(message: Message):
 @with_context(include_player=True)
 @log_exceptions()
 def send_player_sessions_keyboard(**kwargs):
-    chat_id, player = get_kwargs(["chat_id", "player"], kwargs)
+    chat_id, player = get_kwargs(("chat_id", "player"), kwargs)
 
     player_sessions = PlayerSessionRepository.filter(player=player, status="registered")
     if not player_sessions:
@@ -33,7 +33,7 @@ def send_player_sessions_keyboard(**kwargs):
 def call_cancel(**kwargs):
     logging.info("\n\n___ call_cancel ___")
 
-    data, chat_id, player, message_id = get_kwargs(["data", "chat_id", "player", "message_id"], kwargs)
+    data, chat_id, player, message_id = get_kwargs(("data", "chat_id", "player", "message_id"), kwargs)
     player_session_id = int(data.split(":")[1])
 
     player_session = PlayerSessionRepository.get(player_session_id=player_session_id)

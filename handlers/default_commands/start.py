@@ -19,7 +19,7 @@ from telebot.types import CallbackQuery
 @log_exceptions()
 def bot_start(**kwargs):
 
-    user_id, username, chat_id = get_kwargs(["user_id", "username", "chat_id"], kwargs)
+    user_id, username, chat_id = get_kwargs(("user_id", "username", "chat_id"), kwargs)
 
     set_commands(user_id)
     try:

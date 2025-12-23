@@ -14,7 +14,7 @@ def ask_confirmation(question="Вы уверены?"):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            user_id = get_kwargs(['user_id'], kwargs)[0]
+            user_id = get_kwargs(('user_id',), kwargs)[0]
 
             user_confirmations[user_id] = (func, args, kwargs)
 
@@ -27,7 +27,7 @@ def ask_confirmation(question="Вы уверены?"):
 @log_exceptions()
 @with_context()
 def handle_confirmation_callback(**kwargs):
-    message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
+    message_id, user_id, chat_id, data = get_kwargs(("message_id", "user_id", "chat_id", "data"), kwargs)
 
     if user_id not in user_confirmations:
         bot.edit_message_text("Нет ожидающего действия.", chat_id, message_id, reply_markup=None)

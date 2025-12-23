@@ -43,7 +43,7 @@ def send_sessions_keyboard(**kwargs):
 def call_register(**kwargs):
     logging.info("\n\n___ call_register ___")
 
-    data, chat_id, player, message_id = get_kwargs(["data", "chat_id", "player", "message_id"], kwargs)
+    data, chat_id, player, message_id = get_kwargs(("data", "chat_id", "player", "message_id"), kwargs)
     session_id = int(data.split(":")[1])
 
     try:

@@ -15,13 +15,13 @@ from repositories.repositories import ClueRepository, UserPointProgressRepositor
 from keyboards.inline_keyboards import clue_keyboard
 
 
-@bot.message_handler(state=GameState.waiting_for_answer, content_types=['text', 'photo'])
+@bot.message_handler(state=GameState.waiting_for_answer, content_types=('text', 'photo'))
 @with_context(include_user_point_progress=True)
 @log_exceptions()
 def handle_user_answer(**kwargs) -> None:
 
     content_type, user_id, chat_id, player, current_point, user_point_progress, data = (get_kwargs(
-        ["content_type", "user_id", "chat_id", "player", "current_point", "user_point_progress", "data"], kwargs))
+        ("content_type", "user_id", "chat_id", "player", "current_point", "user_point_progress", "data"), kwargs))
 
     logging.info(f"\n\n___{player}: отправил ответ на задание точки {current_point} ___")
 
@@ -55,7 +55,7 @@ def handle_user_answer(**kwargs) -> None:
 @log_exceptions()
 def handle_waiting_for_review(**kwargs) -> None:
 
-    chat_id, user_id = get_kwargs(["chat_id", "user_id"], kwargs)
+    chat_id, user_id = get_kwargs(("chat_id", "user_id"), kwargs)
 
     bot.send_message(chat_id, "Ваш ответ отправлен на проверку. Ожидайте.")
 
@@ -66,7 +66,7 @@ def handle_waiting_for_review(**kwargs) -> None:
 def call_review(**kwargs):
     logging.info(f"\n\n___ call_review ___")
 
-    user_id, chat_id, message_id, data = (get_kwargs(["user_id", "chat_id", "message_id", "data"], kwargs))
+    user_id, chat_id, message_id, data = (get_kwargs(("user_id", "chat_id", "message_id", "data"), kwargs))
     user_point_progress_id = int(data.split(":")[1])
     bot.edit_message_reply_markup(chat_id, message_id, reply_markup=None)
 
@@ -132,7 +132,7 @@ def call_get_clue(**kwargs):
     logging.info(f"\n\n___ call_get_clue ___")
 
     message_id, player, chat_id, current_point, user_point_progress, clues_left = (get_kwargs(
-        ["message_id", "player", "chat_id", "current_point", "user_point_progress", "clues_left"], kwargs))
+        ("message_id", "player", "chat_id", "current_point", "user_point_progress", "clues_left"), kwargs))
 
     logging.info(f"{player}: воспользовался подсказкой.")
     bot.delete_message(chat_id=chat_id, message_id=message_id)

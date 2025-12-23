@@ -20,7 +20,7 @@ from config_data.cities import CITIES
 @with_context()
 def create_game_handler(**kwargs):
     logging.info(f"\n\n___create_game_handler___")
-    user_id, chat_id = get_kwargs(["user_id", "chat_id"], kwargs)
+    user_id, chat_id = get_kwargs(("user_id", "chat_id"), kwargs)
 
     if user_id not in ADMIN_IDS:
         bot.send_message(chat_id, "⛔ Только для администраторов.")
@@ -56,7 +56,7 @@ def show_game_selection(user_id, chat_id):
 def handle_game(**kwargs):
     logging.info(f"\n\n___handle_game___")
 
-    data, user_id, chat_id = get_kwargs(["data", "user_id", "chat_id"], kwargs)
+    data, user_id, chat_id = get_kwargs(("data", "user_id", "chat_id"), kwargs)
 
     try:
         game_info = GameInfoRepository.get(game_id=int(data.split(":")[1]))
@@ -97,7 +97,7 @@ def show_city_step(user_id, chat_id):
 def handle_city(**kwargs):
     logging.info(f"\n\n___handle_city___")
 
-    data, user_id, chat_id = get_kwargs(["data", "user_id", "chat_id"], kwargs)
+    data, user_id, chat_id = get_kwargs(("data", "user_id", "chat_id"), kwargs)
 
     city_data = CITIES.get(data.split(":")[1])
     game_data[user_id]["city"] = city_data["title"]
@@ -132,7 +132,7 @@ def ask_location(user_id, chat_id):
 def receive_location(**kwargs):
     logging.info(f"\n\n___receive_location___")
 
-    message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
+    message_id, user_id, chat_id, data = get_kwargs(("message_id", "user_id", "chat_id", "data"), kwargs)
     location_url = data.strip()
     if not is_url_accessible(location_url):
         try:
@@ -173,7 +173,7 @@ def ask_date(user_id, chat_id):
 def receive_date(**kwargs):
     logging.info(f"\n\n___receive_date___")
 
-    message_id, user_id, chat_id, data = get_kwargs(["message_id", "user_id", "chat_id", "data"], kwargs)
+    message_id, user_id, chat_id, data = get_kwargs(("message_id", "user_id", "chat_id", "data"), kwargs)
 
     try:
         local_dt = datetime.strptime(data.strip(), "%d.%m.%Y %H:%M")

@@ -24,7 +24,7 @@ from functools import partial
 @log_exceptions()
 def manage_game_handler(**kwargs):
     logging.info(f"\n\n___manage_game_handler___")
-    user_id, chat_id = get_kwargs(["user_id", "chat_id"], kwargs)
+    user_id, chat_id = get_kwargs(("user_id", "chat_id"), kwargs)
 
     if user_id not in ADMIN_IDS:
         bot.send_message(chat_id, "⛔ Только для администраторов.")
@@ -60,7 +60,7 @@ def show_sessions_selection(user_id, chat_id):
 @with_context()
 def manage_game_by_id(**kwargs):
     logging.info(f"\n\n___manage_game_by_id___")
-    data, user_id, chat_id, message_id = get_kwargs(["data", "user_id", "chat_id", "message_id"], kwargs)
+    data, user_id, chat_id, message_id = get_kwargs(("data", "user_id", "chat_id", "message_id"), kwargs)
     session_id = int(data.split(":")[1])
 
     try:
@@ -96,7 +96,7 @@ def show_action_step(user_id, chat_id, session_id):
 def call_manager(**kwargs):
     logging.info(f"\n\n___call_manager___")
 
-    data, user_id, chat_id, message_id = get_kwargs(["data", "user_id", "chat_id", "message_id"], kwargs)
+    data, user_id, chat_id, message_id = get_kwargs(("data", "user_id", "chat_id", "message_id"), kwargs)
     session_id = int(data.split(":")[1])
     try:
         game_session = GameSessionRepository.get(session_id=session_id)
