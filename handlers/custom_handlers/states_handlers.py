@@ -6,7 +6,6 @@ from config_data.config import ADMIN_IDS
 from utils.decorators.with_context import with_context
 from utils.decorators.log_exceptions import log_exceptions
 from utils.misc.get_kwargs import get_kwargs
-from telebot.apihelper import ApiTelegramException
 from peewee import DoesNotExist
 from utils.misc.exceptions import JSONError
 from datetime import datetime
@@ -15,7 +14,7 @@ from repositories.repositories import ClueRepository, UserPointProgressRepositor
 from keyboards.inline_keyboards import clue_keyboard
 
 
-@bot.message_handler(state=GameState.waiting_for_answer, content_types=('text', 'photo'))
+@bot.message_handler(state=GameState.waiting_for_answer)
 @with_context(include_user_point_progress=True)
 @log_exceptions()
 def handle_user_answer(**kwargs) -> None:
@@ -25,29 +24,24 @@ def handle_user_answer(**kwargs) -> None:
 
     logging.info(f"\n\n___{player}: отправил ответ на задание точки {current_point} ___")
 
-    try:
-        admin_msg = (f"Ответ на точку {current_point} от {player}:\n"
-                     f"(тип - {current_point.answer['type']}, ответ - {current_point.answer['value']})")
+    admin_msg = (f"Ответ на точку {current_point} от {player}:\n"
+                 f"(тип - {current_point.answer['type']}, ответ - {current_point.answer['text']})")
+    keyboard = review_keyboard(user_point_progress.user_point_progress_id)
 
-        keyboard = review_keyboard(user_point_progress.user_point_progress_id)
-
-        if content_type == 'text':
-            bot.send_message(ADMIN_IDS[0], admin_msg)
-            bot.send_message(ADMIN_IDS[0], data, reply_markup=keyboard)
-        elif content_type == 'photo':
-            bot.send_photo(ADMIN_IDS[0], data[-1].file_id, caption=admin_msg, reply_markup=keyboard)
-        else:
-            bot.send_message(chat_id, "В качестве ответа пришлите текст или фото.")
-            raise TypeError(f"{player}: отправил ответ неверного формата {content_type}")
-
-    except (TypeError, ValueError, AttributeError, KeyError, IndexError, ApiTelegramException, Exception) as error:
-        logging.error(f"При отправлении ответа админу: {error}", exc_info=True)
-        raise
+    if content_type == 'text':
+        bot.send_message(ADMIN_IDS[0], admin_msg)
+        bot.send_message(ADMIN_IDS[0], data, reply_markup=keyboard)
+    elif content_type == 'photo':
+        bot.send_photo(ADMIN_IDS[0], data[-1].file_id, caption=admin_msg, reply_markup=keyboard)
     else:
-        bot.send_message(chat_id, "Ответ получен. Ожидайте проверки.")
-        logging.debug(f"{player}: ответ отправлен на проверку.")
+        bot.send_message(chat_id, "В качестве ответа пришлите, пожалуйста, текст или фото.")
+        logging.warning(f"{player}: неверный тип ответа {content_type}")
+        return
 
-        safe_set_state(user_id, GameState.waiting_for_review, chat_id)
+    bot.send_message(chat_id, "Ваш ответ получен. Ожидайте проверки.")
+    logging.debug(f"{player}: ответ отправлен на проверку.")
+
+    safe_set_state(user_id, GameState.waiting_for_review, chat_id)
 
 
 @bot.message_handler(state=GameState.waiting_for_review)
@@ -70,11 +64,7 @@ def call_review(**kwargs):
     user_point_progress_id = int(data.split(":")[1])
     bot.edit_message_reply_markup(chat_id, message_id, reply_markup=None)
 
-    try:
-        user_point_progress = UserPointProgressRepository.get(user_point_progress_id=user_point_progress_id)
-    except (DoesNotExist, Exception) as error:
-        logging.error(f"При получении UserPointProgress: {error}", exc_info=True)
-        raise
+    user_point_progress = UserPointProgressRepository.get(user_point_progress_id=user_point_progress_id)
 
     player = user_point_progress.player_session.player
     after_solved: dict = user_point_progress.point.after_solved
@@ -85,24 +75,16 @@ def call_review(**kwargs):
         logging.info(f"\n\n___{player}: ответ верный.___")
 
         bot.send_message(chat_id, "Верно")
-        try:
-            UserPointProgressRepository.update_instance(instance=user_point_progress,
-                                                        finished_at=datetime.now(),
-                                                        is_finished=True)
-        except (ValueError, Exception) as error:
-            logging.error(f"Ошибка обновления UserPointProgress: {error}")
 
-        else:
-            logging.debug("UserPointProgress успешно обновлен.")
-            logging.info(f"{player}: Время прохождения точки {point}: {user_point_progress.time}.")
+        UserPointProgressRepository.update_instance(instance=user_point_progress,
+                                                    finished_at=datetime.now(),
+                                                    is_finished=True)
 
-        try:
-            bot.send_message(player.user_id, after_solved["value"])
-            bot.send_message(player.user_id, after_solved["facts"])
+        logging.debug("UserPointProgress успешно обновлен.")
+        logging.info(f"{player}: Время прохождения точки {point}: {user_point_progress.time}.")
 
-        except (KeyError, Exception) as error:
-            logging.error(f"{player}:При отправке after_solved точки {point}: {error}", exc_info=True)
-            raise
+        bot.send_message(player.user_id, after_solved["value"])
+        bot.send_message(player.user_id, after_solved["facts"])
 
         logging.debug(f"{player}:Отправлен ответ на правильное решение точки {point}.")
 
@@ -137,15 +119,8 @@ def call_get_clue(**kwargs):
     logging.info(f"{player}: воспользовался подсказкой.")
     bot.delete_message(chat_id=chat_id, message_id=message_id)
 
-    try:
-        clues = ClueRepository.filter(point=current_point)
-        if clues:
-            clue = list(clues)[-clues_left]
-        else:
-            raise JSONError(f"Не найдено подсказок для {current_point}")
-    except (JSONError, IndexError, Exception) as error:
-        logging.error(f"{player}:Ошибка получения подсказок: {error}", exc_info=True)
-        raise
+    clues = ClueRepository.filter(point=current_point)
+    clue = list(clues)[-clues_left]
 
     bot.send_message(chat_id, f"Подсказка №{clue.order}:\n{clue.text}")
     logging.debug(f"{player}: подсказка отправлена")

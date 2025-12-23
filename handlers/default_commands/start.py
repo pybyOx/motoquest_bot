@@ -24,13 +24,11 @@ def bot_start(**kwargs):
     set_commands(user_id)
     try:
         player = PlayerRepository.create(user_id=user_id, username=username)
-        bot.send_message(chat_id, f"Привет, {username}!")
-        logging.info(f"{player}: зарегистрирован.")
     except AlreadyExistsError:
         bot.send_message(chat_id, f"Рад тебя снова видеть, {username}!")
-    except CreationError as error:
-        logging.error(f"[При создании Player: {error}", exc_info=True)
-        raise
+    else:
+        bot.send_message(chat_id, f"Привет, {username}!")
+        logging.info(f"{player}: зарегистрирован.")
 
     if user_id not in ADMIN_IDS:
 

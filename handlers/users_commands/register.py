@@ -46,18 +46,11 @@ def call_register(**kwargs):
     data, chat_id, player, message_id = get_kwargs(("data", "chat_id", "player", "message_id"), kwargs)
     session_id = int(data.split(":")[1])
 
-    try:
-        game_session = GameSessionRepository.get(session_id=session_id)
-        bot.edit_message_text(f"Запись на {game_session}:", chat_id, message_id, reply_markup=None)
-    except DoesNotExist as error:
-        logging.error(f"При получении GameSession: {error}", exc_info=True)
-        raise
+    game_session = GameSessionRepository.get(session_id=session_id)
+    bot.edit_message_text(f"Запись на {game_session}:", chat_id, message_id, reply_markup=None)
 
     try:
         PlayerSessionRepository.create(player=player, game_session=game_session)
-    except CreationError as error:
-        logging.error(f"При создании PlayerSession: {error}", exc_info=True)
-        raise
     except AlreadyExistsError:
         bot.send_message(chat_id, "Вы уже записаны на эту игру.")
         return

@@ -2,14 +2,13 @@ from loader import bot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.apihelper import ApiTelegramException
 from keyboards.inline_keyboards import objects_keyboard
-from peewee import DoesNotExist
 from utils.decorators.log_exceptions import log_exceptions
 from utils.decorators.with_context import with_context
 import logging
 from utils.misc.get_kwargs import get_kwargs
 from repositories.repositories import (PointRepository, PlayerSessionRepository, UserPointProgressRepository)
 from states.states_game import GameState
-from datetime import datetime
+from datetime import datetime, UTC
 from handlers.custom_handlers.states_handlers import safe_set_state
 
 
@@ -48,19 +47,11 @@ def call_select_point(**kwargs):
         ("data", "message_id", "chat_id", "player", "player_session"), kwargs))
     point_id = int(data.split(":")[1])
 
-    try:
-        point = PointRepository.get(point_id=point_id)
-    except (DoesNotExist, ValueError, Exception) as error:
-        logging.error(f"При получении Point: {error}", exc_info=True)
-        raise
+    point = PointRepository.get(point_id=point_id)
 
     logging.info(f"{player}: отправляется на точку {point}")
 
-    try:
-        PlayerSessionRepository.update_instance(player_session, current_point=point)
-    except (ValueError, Exception) as error:
-        logging.error(f"Ошибка обновления PlayerSessionRepository: {error}", exc_info=True)
-        raise
+    PlayerSessionRepository.update_instance(player_session, current_point=point)
 
     logging.debug(f"{player_session}: {player_session.current_point}")
 
@@ -90,26 +81,27 @@ def call_arrived(**kwargs):
     logging.info(f"{player}: прибыл на точку {current_point}")
 
     try:
-        UserPointProgressRepository.update_instance(user_point_progress, started_at=datetime.now())
-    except (ValueError, Exception) as error:
+        UserPointProgressRepository.update_instance(
+            user_point_progress,
+            started_at=datetime.now(UTC))
+    except ValueError as error:
         logging.error(f"Ошибка обновления UserPointProgress: {error}")
     else:
         logging.debug("UserPointProgress успешно обновлен.")
 
-    try:
-        with open(task["photo"], 'rb') as photo:
-            bot.send_photo(chat_id, photo, caption=f"<b>📍 {current_point.title}</b>", parse_mode="HTML")
+    with open(task["photo"], 'rb') as photo:
+        bot.send_photo(
+            chat_id,
+            photo,
+            caption=f"<b>📍 {current_point.title}</b>",
+            parse_mode="HTML")
 
-        bot.send_message(chat_id, task["value"])
+    bot.send_message(chat_id, task["value"])
 
-        if "voice" in task:
-            file_path = task["voice"]
-            with open(file_path, 'rb') as voice:
-                bot.send_voice(chat_id=chat_id, voice=voice)
-
-    except (KeyError, ApiTelegramException) as error:
-        logging.error(f"При получении информации точки: {error}", exc_info=True)
-        raise
+    if "voice" in task:
+        file_path = task["voice"]
+        with open(file_path, 'rb') as voice:
+            bot.send_voice(chat_id=chat_id, voice=voice)
 
     logging.debug(f"{player}: Отправлено задание точки {current_point}.")
 
@@ -129,12 +121,9 @@ def call_finish(**kwargs):
 
     bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id, reply_markup=None)
 
-    try:
-        bot.send_message(chat_id,
-                         f"{finish_data['value']}\n\n📍 <a href=\"{finish_data['location']}\">Открыть локацию</a>",
-                         parse_mode="HTML", disable_web_page_preview=True)
-    except (ApiTelegramException, Exception) as error:
-        logging.error(f"{player}:При отправке информации о финальной точке: {error}", exc_info=True)
-        raise
+    bot.send_message(chat_id,
+                     f"{finish_data['value']}\n\n📍 <a href=\"{finish_data['location']}\">Открыть локацию</a>",
+                     parse_mode="HTML", disable_web_page_preview=True)
+
     PlayerSessionRepository.update_instance(player_session, status="finished")
     logging.debug(f"{player}:Информация о финальной точке успешно отправлена.")
