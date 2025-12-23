@@ -68,8 +68,12 @@ class GameSession(BaseModel):
         return self.finished or self.date < datetime.now(UTC)
 
     def __str__(self):
-        date = cast(datetime, self.date)
-        date_str = f"{date.strftime('%d.%m.%Y %H:%M')}"
+        date_utc = cast(datetime, self.date)
+        if self.timezone:
+            local_dt = date_utc.astimezone(ZoneInfo(self.timezone))
+        else:
+            local_dt = date_utc
+        date_str = local_dt.strftime("%d.%m.%Y %H:%M")
         city_str = f"📍 {self.city}" if self.city else ""
         return f"{self.game_info.title} {city_str} \n({date_str})"
     
