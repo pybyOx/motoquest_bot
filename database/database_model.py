@@ -3,6 +3,7 @@ from peewee import (Model, CharField, IntegerField, DateTimeField, TextField, Bo
 from playhouse.sqlite_ext import SqliteExtDatabase, JSONField
 from datetime import datetime, UTC
 from typing import cast
+from zoneinfo import ZoneInfo
 
 
 db = SqliteExtDatabase("user_games.db", pragmas={'foreign_keys': 1})
