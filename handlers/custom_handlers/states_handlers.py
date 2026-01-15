@@ -6,9 +6,7 @@ from config_data.config import ADMIN_IDS
 from utils.decorators.with_context import with_context
 from utils.decorators.log_exceptions import log_exceptions
 from utils.misc.get_kwargs import get_kwargs
-from peewee import DoesNotExist
-from utils.misc.exceptions import JSONError
-from datetime import datetime
+from datetime import datetime, UTC
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from repositories.repositories import ClueRepository, UserPointProgressRepository
 from keyboards.inline_keyboards import clue_keyboard
@@ -77,7 +75,7 @@ def call_review(**kwargs):
         bot.send_message(chat_id, "Верно")
 
         UserPointProgressRepository.update_instance(instance=user_point_progress,
-                                                    finished_at=datetime.now(),
+                                                    finished_at=datetime.now(UTC),
                                                     is_finished=True)
 
         logging.debug("UserPointProgress успешно обновлен.")
