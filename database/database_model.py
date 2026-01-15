@@ -4,9 +4,10 @@ from playhouse.sqlite_ext import SqliteExtDatabase, JSONField
 from datetime import datetime, UTC
 from typing import cast
 from zoneinfo import ZoneInfo
+from config_data.config import BASE_DIR
 
 
-db = SqliteExtDatabase("user_games.db", pragmas={'foreign_keys': 1})
+db = SqliteExtDatabase(BASE_DIR/"user_games.db", pragmas={'foreign_keys': 1})
 
 
 class BaseModel(Model):
@@ -28,11 +29,11 @@ class Point(BaseModel):
     """Информация о точках игры."""
     point_id = AutoField()
     title = CharField()
-    location = JSONField()  # keys: REQ - "link"; OPT - "text", "voice", "image"
+    location = JSONField()  # keys: REQ - "link"; OPT - "text", "audio", "image"
 
-    task = JSONField()  # keys: REQ - "text"; OPT - "voice", "image"
+    task = JSONField()  # keys: REQ - "text"; OPT - "audio", "image"
     answer = JSONField()  # keys: REQ - "text", "type"
-    after_solved = JSONField()  # keys: REQ - "text"; OPT - "voice", "image"
+    after_solved = JSONField()  # keys: REQ - "text"; OPT - "audio", "image"
 
     game_info = ForeignKeyField(GameInfo, backref="points", on_delete="CASCADE")  # GameInfo.points — все точки игры
 
