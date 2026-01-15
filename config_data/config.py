@@ -1,5 +1,7 @@
 import os
 from dotenv import load_dotenv, find_dotenv
+from pathlib import Path
+
 
 if not find_dotenv():
     exit("Переменные окружения не загружены т.к отсутствует файл .env")
@@ -21,3 +23,5 @@ ADMIN_COMMANDS = (
     ("create_game", "Создать сессию"),
     ("manage_game", "Управлять сессией")
 )
+
+BASE_DIR = Path(__file__).resolve().parent.parent
