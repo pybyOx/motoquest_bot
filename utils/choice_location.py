@@ -1,6 +1,5 @@
 from loader import bot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from telebot.apihelper import ApiTelegramException
 from keyboards.inline_keyboards import objects_keyboard
 from utils.decorators.log_exceptions import log_exceptions
 from utils.decorators.with_context import with_context
