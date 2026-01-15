@@ -30,26 +30,18 @@ def manage_game_handler(**kwargs):
         bot.send_message(chat_id, "⛔ Только для администраторов.")
         return
 
-    reset_user_session(user_id, chat_id)
-
-    show_sessions_selection(user_id, chat_id)
-
-
-def show_sessions_selection(user_id, chat_id):
-    logging.info(f"\n\n___ show_sessions_selection ___")
-
-    user_steps[user_id].append((show_sessions_selection, (user_id, chat_id), {}))
-    logging.debug(f"Добавили в user_steps: {user_steps[user_id]}")
-
     game_sessions = GameSessionRepository.filter(finished=False)
     if not game_sessions:
         bot.send_message(chat_id, "Нет активных игровых сессий.")
         return
 
-    msg = bot.send_message(chat_id, f"Выберите игровую сессию, которой хотите управлять:",
-                           reply_markup=combine_keyboards(
-                               objects_keyboard(game_sessions, "manage_game:"),
-                               cancel_or_back_keyboard(False)))
+    reset_user_session(user_id, chat_id)
+
+    keyboard = combine_keyboards(objects_keyboard(game_sessions, "manage_game:"),
+                                 cancel_or_back_keyboard(False))
+    msg = bot.send_message(chat_id,
+                           f"Выберите игровую сессию, которой хотите управлять:",
+                           reply_markup=keyboard)
     logging.debug(f"Отправили выбор игры")
 
     bot_messages[user_id].append(msg.message_id)
@@ -58,34 +50,22 @@ def show_sessions_selection(user_id, chat_id):
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith("manage_game:"))
 @with_context()
+@log_exceptions()
 def manage_game_by_id(**kwargs):
     logging.info(f"\n\n___manage_game_by_id___")
     data, user_id, chat_id, message_id = get_kwargs(("data", "user_id", "chat_id", "message_id"), kwargs)
     session_id = int(data.split(":")[1])
 
-    try:
-        game_session = GameSessionRepository.get(session_id=session_id)
-    except (DoesNotExist, Exception) as error:
-        bot.edit_message_text(f"Не найдена игра (id {session_id})", chat_id, message_id, reply_markup=None)
-        logging.error(f"При получении GameSession: {error}", exc_info=True)
-        return
+    game_session = GameSessionRepository.get(session_id=session_id)
 
-    bot.edit_message_text(text=f"Игра: {game_session}",
-                          chat_id=chat_id, message_id=bot_messages[user_id][-1], reply_markup=None)
-    logging.debug(f"Заменили вопрос с выбором игры на ответ.")
-
-    show_action_step(user_id, chat_id, session_id)
-
-
-def show_action_step(user_id, chat_id, session_id):
-    logging.info(f"\n\n___ show_action_step ___")
-
-    user_steps[user_id].append((show_action_step, (user_id, chat_id, session_id), {}))
-    logging.debug(f"Добавили в user_steps: {user_steps[user_id]}")
-
-    msg = bot.send_message(chat_id, f"Выберите действие:", reply_markup=combine_keyboards(
-        start_or_delete_keyboard(session_id), cancel_or_back_keyboard()))
-    logging.debug(f"Отправлен выбор старт или удаление.")
+    msg = bot.edit_message_text(text=f"Игра: {game_session}"
+                                     f"Выберите действие:",
+                                chat_id=chat_id,
+                                message_id=bot_messages[user_id][-1],
+                                reply_markup=combine_keyboards(
+                                    start_or_delete_keyboard(session_id),
+                                    cancel_or_back_keyboard()))
+    logging.debug(f"Заменили вопрос с выбором игры на вопрос с выбором действия.")
 
     bot_messages[user_id].append(msg.message_id)
     logging.debug(f"Добавили в bot_messages: {bot_messages[user_id]}")
@@ -93,6 +73,7 @@ def show_action_step(user_id, chat_id, session_id):
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith(("delete_game:", "start_game:")))
 @with_context()
+@log_exceptions()
 def call_manager(**kwargs):
     logging.info(f"\n\n___call_manager___")
 
@@ -133,14 +114,11 @@ def delete_game_session(game_session: GameSession, user_id: int):
                 bot.send_message(player_session.player.user_id,
                                  f"⚠️ Игра {player_session.game_session}, на которую вы были записаны, отменена.")
         logging.debug(f"Отправлены сообщения об отмене игры пользователям, зарегистрировавшимся на {game_session}")
-    try:
-        GameSessionRepository.delete_instance(game_session)
-    except DeletionError as error:
-        bot.send_message(user_id, f"Ошибка удаления {game_session}.")
-        logging.error(f"При удалении GameSession: {error}", exc_info=True)
-    else:
-        bot.edit_message_text(f"✅ Игра '{game_session}' успешно удалена.", user_id, bot_messages[user_id][-1])
-        logging.debug(f"✅ Игра '{game_session}' успешно удалена.")
+
+    GameSessionRepository.delete_instance(game_session)
+
+    bot.edit_message_text(f"✅ Игра '{game_session}' успешно удалена.", user_id, bot_messages[user_id][-1])
+    logging.debug(f"✅ Игра '{game_session}' успешно удалена.")
 
 
 @ask_confirmation("Вы уверены, что хотите начать эту игру?")
