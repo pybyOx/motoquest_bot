@@ -1,19 +1,11 @@
 from keyboards.inline_keyboards import objects_keyboard
-from loader import bot
-from peewee import DoesNotExist
+from bot.loader import bot
 from utils.decorators.log_exceptions import log_exceptions
 from utils.decorators.with_context import with_context
 import logging
-from utils.misc.exceptions import CreationError, AlreadyExistsError
-from utils.misc.get_kwargs import get_kwargs
+from utils.misc.exceptions import AlreadyExistsError
 from repositories.repositories import GameSessionRepository, PlayerSessionRepository
-from utils.misc.escape_markdown import escape_markdown
-from telebot.types import Message
-
-
-@bot.message_handler(commands=["register"])
-def bot_register(message: Message):
-    send_sessions_keyboard(message)
+from utils.misc.get_kwargs import get_kwargs
 
 
 @with_context()
@@ -26,10 +18,10 @@ def send_sessions_keyboard(**kwargs):
     иначе отправляет сообщение о том, что активных сессий нет.
     """
     logging.info("\n\n___ send_sessions_keyboard ___")
-    chat_id = kwargs['chat_id']
+    chat_id = get_kwargs(("chat_id",), kwargs)[0]
 
     game_sessions = GameSessionRepository.filter(finished=False)
-    if not game_sessions:
+    if not game_sessions.exists():
         bot.send_message(chat_id, "Нет игр для записи.")
         return
 
@@ -37,16 +29,16 @@ def send_sessions_keyboard(**kwargs):
                      reply_markup=objects_keyboard(game_sessions, "register:"))
 
 
-@bot.callback_query_handler(func=lambda c: c.data.startswith("register:"))
 @with_context(include_player=True)
 @log_exceptions()
 def call_register(**kwargs):
     logging.info("\n\n___ call_register ___")
 
     data, chat_id, player, message_id = get_kwargs(("data", "chat_id", "player", "message_id"), kwargs)
-    session_id = int(data.split(":")[1])
 
+    session_id = int(data.split(":")[1])
     game_session = GameSessionRepository.get(session_id=session_id)
+
     bot.edit_message_text(f"Запись на {game_session}:", chat_id, message_id, reply_markup=None)
 
     try:
