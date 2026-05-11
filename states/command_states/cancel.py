@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from keyboards import objects_keyboard
 from core.enums.callback_types import CallBackType
 from presenters.telegram.build_keyboard_items import build_keyboard_items
@@ -36,6 +37,9 @@ class CancelState(BaseUserState):
 
     def handle_cancel_user_session(self, ctx: Context, payload: str, **_: Any) -> None:
         user_session = self._user_session.get_by_id(model_id=int(payload))
+        if user_session.user.id != ctx.user_id:
+            logging.warning(f"User {ctx.user_id} tried to cancel session {user_session.id} owned by {user_session.user.id}")
+            return
         self._user_session.delete_by_id(model_id=user_session.id)
         self._finish_action(ctx.user_id, f"✅ Запись на игру \n{user_session.game_session}\nуспешно отменена.")
 

@@ -41,7 +41,7 @@ class GameChoiceState(BaseUserState):
             ),
         )
 
-    def handle_chosen_game_info(self, ctx: Context, payload: int, **_: Any) -> None:
+    def handle_chosen_game_info(self, ctx: Context, payload: str, **_: Any) -> None:
         game_info: GameInfo = self.services.game_info_repo.get_by_id(model_id=int(payload))
         with db.atomic():
             self._draft.update_by_id(ctx.user_id, game_info=game_info)

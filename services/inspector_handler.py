@@ -60,7 +60,6 @@ class InspectorHandler:
             return
 
         handler(user=user, point_progress=point_progress)
-        print("handler done")
         self.ui.delete_ui_keyboard(ctx.chat_id, ctx.message_id)
         self.ui.send_msg(
             chat_id=ctx.chat_id,
@@ -84,7 +83,6 @@ class InspectorHandler:
         user_session: UserSession = self.game_guard.require_user_session(user)
 
         if not self.point_progress_repo.has_non_finished(user_session.id):
-            print("has_non_finished")
             game_session: GameSession = user_session.game_session
             finish_location_info: dict = game_session.game_info.finish
             self.ui.send_info(
