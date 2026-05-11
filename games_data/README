@@ -23,11 +23,13 @@ games_data/
 
 JSON-файл описывает одну игру, состоящую из:
     - названия игры
+    - названия папки с игрой
     - последовательности точек
     - финальной локации
 
     {
       "title": "Название игры",
+      "slug": "Название папки"
       "points": [ ... ],
       "finish": { ... }
     }
@@ -59,6 +61,10 @@ Google Maps, Yandex Maps, OSM, Bing, Telegram
 🟢 title  - Название игры.
 
         "title": "Игра престолов"
+
+🟢 slug  - Название папки.
+
+        "slug": "game_of_thrones"
 
 📍 points — Список точек, которые нужно пройти.
             Количество точек может быть 1 и больше.
@@ -135,9 +141,9 @@ Google Maps, Yandex Maps, OSM, Bing, Telegram
         ВНЕСЕНИЕ В БАЗУ ДАННЫХ
 
 После заполнения json-файла, в терминале введите команду:
-python -m utils.cli.create_game games_data/название папки с игрой/название файла.json
+python -m cli.create_game games_data/название папки с игрой/название файла.json
 Пример:
-python -m utils.cli.create_game games_data/way_of_the_dragon/game_dragon.json
+python -m cli.create_game games_data/way_of_the_dragon/game_dragon.json
 
 Если файл пройдет проверку - данные игры внесутся в базу данных,
 иначе - см. консоль где ошибка

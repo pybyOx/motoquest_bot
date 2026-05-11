@@ -1,16 +1,38 @@
-import utils.misc.logger
 import logging
-from loader import bot
-import handlers  # noqa: F401  # регистрация хендлеров
-from database.database_model import create_models, setup_db, close_db
-from telebot.custom_filters import StateFilter
+from database.lifecycle import create_models, setup_db, close_db
+from cli.create_game import create_game
+from cli.set_admin import set_admin
+from cli.recover_user import recover_user
 import atexit
+from core.container import get_container
+
+logging.basicConfig(
+    level=logging.DEBUG,  # Минимальный уровень логирования
+    format="%(asctime)s [%(levelname)s] %(message)s",  # Формат логов
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.FileHandler("bot.log", encoding='utf-8'),
+              logging.StreamHandler()
+              ])
+
+# Подавить лишние отладочные логи
+logging.getLogger('peewee').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+
+
+import handlers  # noqa: F401  # регистрация хендлеров
 
 
 if __name__ == "__main__":
     logging.debug("Bot starting")
     setup_db()
     create_models()
-    bot.add_custom_filter(StateFilter(bot))
+
+    # create_game(file_path="games_data/way_of_the_dragon/game_dragon.json")
+    # set_admin(395578226)
+    # recover_user(795176222)  # Рома
+    recover_user(395578226)  # Оксана
+
     atexit.register(close_db)
-    bot.infinity_polling()
+    get_container().bot.infinity_polling()
+
+

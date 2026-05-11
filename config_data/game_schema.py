@@ -8,6 +8,8 @@ SCHEMA = {
     "properties": {
         "title": {"description": "Название игры",
                   "$ref": "#/$defs/title"},
+        "slug": {"description": "Название папки игры",
+                 "$ref": "#/$defs/slug"},
         "points": {"description": "Точки игры",
                    "type": "array",
                    "items": {"$ref": "#/$defs/point"},
@@ -69,8 +71,8 @@ SCHEMA = {
                                         "enum": ["text", "photo"]
                                         },
                                "text": {"description": "Правильный ответ или описание того, что должно быть на фото.",
-                                         "type": "string",
-                                         "minLength": 1}
+                                        "type": "string",
+                                        "minLength": 1}
                            },
                            "additionalProperties": False
                            },
@@ -98,6 +100,10 @@ SCHEMA = {
             "additionalProperties": False
         },
         "title": {
+            "type": "string",
+            "minLength": 1
+        },
+        "slug": {
             "type": "string",
             "minLength": 1
         },

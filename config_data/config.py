@@ -10,18 +10,14 @@ else:
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-ADMIN_IDS = list(map(int, os.getenv("ADMIN_IDS", "").split(",")))
+MAIN_ADMIN_ID = int(os.getenv("MAIN_ADMIN_ID"))
 
-PLAYER_COMMANDS = (
-    ("start", "Запустить бота"),
-    ("help", "Написать в поддержку"),
-    ("register", "Записаться на игру"),
-    ("cancel", "Отменить запись"),
-    ("info", "Информация о ваших играх")
-)
-ADMIN_COMMANDS = (
-    ("create_game", "Создать сессию"),
-    ("manage_game", "Управлять сессией")
-)
+ADMIN_IDS = {
+    int(x)
+    for x in os.getenv("ADMIN_IDS", "").split(",")
+    if x.strip()
+}
+INSPECTOR_ID = int(os.getenv("INSPECTOR_ID"))
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+GAMES_DATA_DIR = BASE_DIR / "games_data"

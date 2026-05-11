@@ -1,1 +1,1 @@
-from . import config, game_schema, cities
+from . import config, game_schema
