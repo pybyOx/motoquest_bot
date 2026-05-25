@@ -6,6 +6,11 @@ UPDATE_METHODS = [
     ("update_role", "role", RoleType.ADMIN, RoleType.PLAYER),
     ("update_state", "state", UserState.registration, UserState.idle),
 ]
+SETTER_METHODS = [
+    ("set_error",         "is_error",  True,  False),
+    ("clear_error",       "is_error",  False, True),
+    ("reset_ui_msg_id",   "ui_msg_id", None,  12345),
+]
 
 
 def test_get_or_create_by_id_creates_new_user(user_repo):
@@ -156,5 +161,48 @@ def test_reset_recovery_attempts_does_not_affect_other_users(user_repo, existing
 
 def test_reset_recovery_attempts_returns_zero_if_user_not_found(user_repo, existing_user):
     updated_count = user_repo.reset_recovery_attempts(999)
+
+    assert updated_count == 0
+
+
+@pytest.mark.parametrize("method_name, field_name, target_value, initial_value", SETTER_METHODS)
+def test_setter_method_changes_field(
+        user_repo, existing_user,
+        method_name, field_name, target_value, initial_value
+):
+    method = getattr(user_repo, method_name)
+    user_repo.update_by_id(existing_user.id, **{field_name: initial_value})
+
+    updated_count = method(existing_user.id)
+
+    user_from_db = user_repo.get_by_id(existing_user.id)
+    assert updated_count == 1
+    assert getattr(user_from_db, field_name) == target_value
+
+
+@pytest.mark.parametrize("method_name, field_name, target_value, initial_value", SETTER_METHODS)
+def test_setter_method_does_not_affect_other_users(
+        user_repo, existing_user,
+        method_name, field_name, target_value, initial_value
+):
+    method = getattr(user_repo, method_name)
+    other_user, _ = user_repo.get_or_create_by_id(456)
+    user_repo.update_by_id(other_user.id, **{field_name: initial_value})
+    user_repo.update_by_id(existing_user.id, **{field_name: initial_value})
+
+    method(existing_user.id)
+
+    other_user_from_db = user_repo.get_by_id(other_user.id)
+    assert getattr(other_user_from_db, field_name) == initial_value
+
+
+@pytest.mark.parametrize("method_name, field_name, target_value, initial_value", SETTER_METHODS)
+def test_setter_method_returns_zero_if_user_not_found(
+        user_repo, existing_user,
+        method_name, field_name, target_value, initial_value
+):
+    method = getattr(user_repo, method_name)
+
+    updated_count = method(999)
 
     assert updated_count == 0

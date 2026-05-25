@@ -140,15 +140,15 @@ class BaseRepository(Generic[T]):
                 .where(self.model.id == model_id)
                 .execute()
             )
-
-            if deleted == 0:
-                raise DoesNotExist(f"{self.model.__name__} с id={model_id} не найден для удаления.")
-
-            return deleted
-
         except Exception as error:
             raise DeletionError(f"{self.model.__name__} ошибка при удалении."
                                 f"\n{error}")
+        if deleted == 0:
+            raise DoesNotExist(f"{self.model.__name__} с id={model_id} не найден для удаления.")
+
+        return deleted
+
+
 
     def update_if_key_absent(  # TODO: разобраться как работает
         self,
