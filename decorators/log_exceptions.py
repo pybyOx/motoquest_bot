@@ -15,6 +15,7 @@ user_states_service = container.user_states_service
 user_repo = container.user_repo
 ui_service = container.ui_service
 
+
 def log_exceptions():
     def decorator(func):
         @wraps(func)
