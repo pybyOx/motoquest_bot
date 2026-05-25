@@ -39,16 +39,6 @@ class UserSessionRepository(BaseRepository[UserSession]):
             )
         )
 
-    def get_active_for_user(self, user_id: int) -> ModelSelect:
-        return (
-            self.model
-            .select()
-            .where(
-                (self.model.user == user_id) &
-                (self.model.state == SessionState.STARTED)
-            )
-        )
-
     def set_current_point(self, user_session_id: int, point_id: int) -> int:
         return (
             self.model
