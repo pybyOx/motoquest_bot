@@ -13,6 +13,7 @@ from database.models.admin_draft import AdminDraft
 
 from database.repositories.user_repository import UserRepository
 from database.repositories.user_event_repository import UserEventRepository
+from database.repositories.game_session_repository import GameSessionRepository
 
 from datetime import datetime
 
@@ -53,6 +54,11 @@ def user_event_repo(test_db):
 
 
 @pytest.fixture
+def game_session_repo(test_db):
+    return GameSessionRepository()
+
+
+@pytest.fixture
 def user(user_repo):
     user, _ = user_repo.get_or_create_by_id(user_id=123, username="oksana")
     return user
@@ -67,8 +73,25 @@ def other_user(user_repo):
 @pytest.fixture
 def game_session(test_db):
     return GameSession.create(
-        location="Парк Горького",
+        location="A",
         date=datetime(2026, 6, 1, 12, 0),
+    )
+
+
+@pytest.fixture
+def other_game_session(test_db):
+    return GameSession.create(
+        location="B",
+        date=datetime(2026, 6, 1, 12, 0),
+    )
+
+
+@pytest.fixture
+def finished_game_session(test_db):
+    return GameSession.create(
+        location="C",
+        date=datetime(2026, 6, 1, 12, 0),
+        finished=True
     )
 
 
