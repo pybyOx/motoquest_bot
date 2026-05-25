@@ -4,13 +4,13 @@ from database.models.user import User
 import pytest
 
 
-def test_get_by_id_returns_user(user_repo, existing_user):
-    user = user_repo.get_by_id(existing_user.id)
+def test_get_by_id_returns_user(user_repo, user):
+    user_from_db = user_repo.get_by_id(user.id)
 
-    assert user == existing_user
+    assert user == user_from_db
 
 
-def test_get_by_id_raises_does_not_exist_for_unknown_id(user_repo, existing_user):
+def test_get_by_id_raises_does_not_exist_for_unknown_id(user_repo, user):
     with pytest.raises(DoesNotExist):
         user_repo.get_by_id(999)
 
@@ -37,14 +37,14 @@ def test_create_raises_already_exists_error_on_duplicate_id(user_repo):
     assert "id" in str(exc_info.value)
 
 
-def test_delete_by_id_removes_user(user_repo, existing_user):
-    updated_count = user_repo.delete_by_id(existing_user.id)
+def test_delete_by_id_removes_user(user_repo, user):
+    updated_count = user_repo.delete_by_id(user.id)
 
     assert updated_count == 1
     with pytest.raises(DoesNotExist):
-        user_repo.get_by_id(existing_user.id)
+        user_repo.get_by_id(user.id)
 
 
-def test_delete_by_id_raises_does_not_exist_for_unknown_id(user_repo, existing_user):
+def test_delete_by_id_raises_does_not_exist_for_unknown_id(user_repo, user):
     with pytest.raises(DoesNotExist):
         user_repo.delete_by_id(999)

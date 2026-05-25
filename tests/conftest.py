@@ -12,6 +12,7 @@ from database.models.user_event import UserEvent
 from database.models.admin_draft import AdminDraft
 
 from database.repositories.user_repository import UserRepository
+from database.repositories.user_event_repository import UserEventRepository
 
 from datetime import datetime
 
@@ -47,8 +48,19 @@ def user_repo(test_db):
 
 
 @pytest.fixture
-def existing_user(user_repo):
+def user_event_repo(test_db):
+    return UserEventRepository()
+
+
+@pytest.fixture
+def user(user_repo):
     user, _ = user_repo.get_or_create_by_id(user_id=123, username="oksana")
+    return user
+
+
+@pytest.fixture
+def other_user(user_repo):
+    user, _ = user_repo.get_or_create_by_id(user_id=456, username="maria")
     return user
 
 
@@ -61,5 +73,10 @@ def game_session(test_db):
 
 
 @pytest.fixture
-def user_session(existing_user, game_session):
-    return UserSession.create(user=existing_user, game_session=game_session)
+def user_session(user, game_session):
+    return UserSession.create(user=user, game_session=game_session)
+
+
+@pytest.fixture
+def other_user_session(other_user, game_session):
+    return UserSession.create(user=other_user, game_session=game_session)
