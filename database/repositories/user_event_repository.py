@@ -1,6 +1,7 @@
 from database.models.user_event import UserEvent
 from database.repositories.base_repository import BaseRepository
 from core.enums.user_event_types import UserEventType
+from peewee import IntegrityError
 
 
 class UserEventRepository(BaseRepository[UserEvent]):
@@ -14,9 +15,8 @@ class UserEventRepository(BaseRepository[UserEvent]):
         :return: True — если сообщение нужно отправить
                  False — если уже было отправлено
         """
-        created = self.model.insert(
-            user_session=user_session_id,
-            event_type=event_type
-        ).on_conflict_ignore().execute()
-
-        return created == 1
+        try:
+            self.model.create(user_session=user_session_id, event_type=event_type)
+            return True
+        except IntegrityError:
+            return False
