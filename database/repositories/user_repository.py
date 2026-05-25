@@ -47,6 +47,8 @@ class UserRepository(BaseRepository[User]):
             user_id: int,
             user_session_id: int
     ) -> int:
+        # TODO: валидация существования user_session_id —
+        #   DeferredForeignKey не создаёт FK-constraint на уровне SQLite
         return (
             self.model
             .update(current_user_session=user_session_id)
