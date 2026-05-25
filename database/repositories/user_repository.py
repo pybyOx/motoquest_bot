@@ -72,13 +72,19 @@ class UserRepository(BaseRepository[User]):
             .execute()
         )
 
-    def update_if_field_equals(  # TODO: разобраться как работает
+    def update_if_field_equals(
             self,
             obj_id: int,
             field: str,
             old_value: Any,
             new_value: Any,
     ) -> bool:
+        """Compare-and-swap: обновляет field на new_value, только если в БД сейчас old_value.
+
+        Используется в UIService.show_user_ui для защиты от гонок при обновлении
+        user.ui_msg_id из конкурентных потоков pyTelegramBotAPI.
+        Возвращает True если запись прошла, False если значение уже было изменено или id не найден.
+        """
         updated = (
             self.model
             .update(**{field: new_value})

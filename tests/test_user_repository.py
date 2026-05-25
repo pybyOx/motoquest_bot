@@ -233,4 +233,54 @@ def test_update_current_session_returns_zero_if_user_not_found(user_repo, existi
     assert updated_count == 0
 
 
+def test_update_if_field_equals_updates_when_value_matches(user_repo, existing_user):
+    result = user_repo.update_if_field_equals(existing_user.id, "state",
+                                              UserState.idle, UserState.registration)
 
+    user_from_db = user_repo.get_by_id(existing_user.id)
+    assert user_from_db.state == UserState.registration
+    assert result is True
+
+
+def test_update_if_field_equals_returns_false_when_value_does_not_match(user_repo, existing_user):
+    existing_user.state = UserState.waiting_location
+    existing_user.save()
+
+    result = user_repo.update_if_field_equals(existing_user.id, "state",
+                                              UserState.idle, UserState.registration)
+
+    user_from_db = user_repo.get_by_id(existing_user.id)
+    assert user_from_db.state == UserState.waiting_location
+    assert result is False
+
+
+def test_update_if_field_equals_returns_false_when_user_not_found(user_repo, existing_user):
+    result = user_repo.update_if_field_equals(999, "state",
+                                              UserState.idle, UserState.registration)
+
+    assert result is False
+
+
+def test_update_if_field_equals_does_not_affect_other_users(user_repo, existing_user):
+    other_user = user_repo.create(dict(id=456))
+    other_user.state = UserState.cancel
+    other_user.save()
+
+    user_repo.update_if_field_equals(existing_user.id, "state",
+                                     UserState.idle, UserState.registration)
+
+    other_user_from_db = user_repo.get_by_id(other_user.id)
+
+    assert other_user_from_db.state == UserState.cancel
+
+
+def test_update_if_field_equals_protects_from_double_update(user_repo, existing_user):
+    # Первый "процесс" успешно обновляет idle → registration
+    result1 = user_repo.update_if_field_equals(existing_user.id, "state",
+                                               UserState.idle, UserState.registration)
+    # Второй "процесс" пытается сделать то же — но значение уже изменилось
+    result2 = user_repo.update_if_field_equals(existing_user.id, "state",
+                                               UserState.idle, UserState.registration)
+
+    assert result1 is True
+    assert result2 is False
