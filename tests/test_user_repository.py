@@ -1,5 +1,6 @@
 from core.enums.user_role_types import RoleType
 from core.enums.user_states import UserState
+from peewee import IntegrityError
 import pytest
 
 UPDATE_METHODS = [
@@ -206,3 +207,30 @@ def test_setter_method_returns_zero_if_user_not_found(
     updated_count = method(999)
 
     assert updated_count == 0
+
+
+def test_update_current_session_sets_user_session(user_repo, existing_user, user_session):
+    updated_count = user_repo.update_current_session(existing_user.id, user_session.id)
+
+    user_from_db = user_repo.get_by_id(existing_user.id)
+    assert user_from_db.current_user_session.id == user_session.id
+    assert updated_count == 1
+
+
+def test_update_current_session_does_not_affect_other_users(user_repo, existing_user, user_session):
+    other_user = user_repo.create(dict(id=456))
+
+    user_repo.update_current_session(existing_user.id, user_session.id)
+
+    other_user_from_db = user_repo.get_by_id(other_user.id)
+
+    assert other_user_from_db.current_user_session is None
+
+
+def test_update_current_session_returns_zero_if_user_not_found(user_repo, existing_user, user_session):
+    updated_count = user_repo.update_current_session(999, user_session.id)
+
+    assert updated_count == 0
+
+
+

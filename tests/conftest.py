@@ -13,6 +13,7 @@ from database.models.admin_draft import AdminDraft
 
 from database.repositories.user_repository import UserRepository
 
+from datetime import datetime
 
 ALL_MODELS = [
     User,
@@ -49,3 +50,16 @@ def user_repo(test_db):
 def existing_user(user_repo):
     user, _ = user_repo.get_or_create_by_id(user_id=123, username="oksana")
     return user
+
+
+@pytest.fixture
+def game_session(test_db):
+    return GameSession.create(
+        location="Парк Горького",
+        date=datetime(2026, 6, 1, 12, 0),
+    )
+
+
+@pytest.fixture
+def user_session(existing_user, game_session):
+    return UserSession.create(user=existing_user, game_session=game_session)
