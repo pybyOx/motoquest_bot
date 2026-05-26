@@ -15,8 +15,10 @@ from database.repositories.user_repository import UserRepository
 from database.repositories.user_event_repository import UserEventRepository
 from database.repositories.game_session_repository import GameSessionRepository
 from database.repositories.user_session_repository import UserSessionRepository
+from database.repositories.point_progress_repository import PointProgressRepository
 
-from datetime import datetime
+
+from datetime import datetime, UTC
 
 ALL_MODELS = [
     User,
@@ -45,6 +47,18 @@ def test_db():
 
 
 @pytest.fixture
+def user(user_repo):
+    user, _ = user_repo.get_or_create_by_id(user_id=123, username="oksana")
+    return user
+
+
+@pytest.fixture
+def other_user(user_repo):
+    user, _ = user_repo.get_or_create_by_id(user_id=456, username="maria")
+    return user
+
+
+@pytest.fixture
 def user_repo(test_db):
     return UserRepository()
 
@@ -55,20 +69,12 @@ def user_event_repo(test_db):
 
 
 @pytest.fixture
-def game_session_repo(test_db):
-    return GameSessionRepository()
-
-
-@pytest.fixture
-def user(user_repo):
-    user, _ = user_repo.get_or_create_by_id(user_id=123, username="oksana")
-    return user
-
-
-@pytest.fixture
-def other_user(user_repo):
-    user, _ = user_repo.get_or_create_by_id(user_id=456, username="maria")
-    return user
+def game_info(test_db):
+    return GameInfo.create(
+        title="Test Quest",
+        slug="test-quest",
+        finish={"text": "Финиш", "link": "https://example.com"},
+    )
 
 
 @pytest.fixture
@@ -97,6 +103,11 @@ def finished_game_session(test_db):
 
 
 @pytest.fixture
+def game_session_repo(test_db):
+    return GameSessionRepository()
+
+
+@pytest.fixture
 def user_session(user, game_session):
     return UserSession.create(user=user, game_session=game_session)
 
@@ -112,12 +123,18 @@ def user_session_repo(test_db):
 
 
 @pytest.fixture
-def game_info(test_db):
-    return GameInfo.create(
-        title="Test Quest",
-        slug="test-quest",
-        finish={"text": "Финиш", "link": "https://example.com"},
-    )
+def point_progress(user_session):
+    return PointProgress.create(user_session=user_session)
+
+
+@pytest.fixture
+def other_point_progress(user_session):
+    return PointProgress.create(user_session=user_session)
+
+
+@pytest.fixture
+def point_progress_repo(test_db):
+    return PointProgressRepository()
 
 
 @pytest.fixture
@@ -130,3 +147,8 @@ def point(game_info):
         after_solved={"text": "Решено"},
         game_info=game_info,
     )
+
+
+@pytest.fixture
+def existing_datetime():
+    return datetime(2026, 6, 1, 12, 0, tzinfo=UTC)

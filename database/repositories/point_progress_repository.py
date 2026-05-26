@@ -48,7 +48,7 @@ class PointProgressRepository(BaseRepository[PointProgress]):
         return (
             self.model
             .update(
-                started_at=finished_at or datetime.now(UTC),
+                finished_at=finished_at or datetime.now(UTC),
                 is_finished=True
             )
             .where(self.model.id == point_progress_id)
