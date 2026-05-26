@@ -3,6 +3,8 @@ from datetime import datetime
 from database.models.admin_draft import AdminDraft
 
 
+# ── reset_all ─────────────────────────────────────────────────────────────────
+
 def test_reset_all_clears_all_fields(admin_draft_repo, game_info, game_session):
     draft = AdminDraft.create(
         user_id=123,
@@ -27,10 +29,10 @@ def test_reset_all_clears_all_fields(admin_draft_repo, game_info, game_session):
 
 
 def test_reset_all_does_not_affect_other_drafts(admin_draft_repo):
-    draft = AdminDraft.create(user_id=123, city="Москва")
+    AdminDraft.create(user_id=123, city="Москва")
     other_draft = AdminDraft.create(user_id=456, city="Питер")
 
-    admin_draft_repo.reset_all(draft.user_id)
+    admin_draft_repo.reset_all(user_id=123)
 
     other_from_db = admin_draft_repo.get_by_id(other_draft.user_id)
     assert other_from_db.city == "Питер"

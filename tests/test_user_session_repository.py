@@ -1,22 +1,22 @@
 import pytest
 
 from core.enums.session_states import SessionState
-
 from database.models.user_session import UserSession
-from database.models.game_session import GameSession
 
 
 STATE_SETTERS = [
     # (method_name, target_state)
-    ("start_session", SessionState.STARTED),
+    ("start_session",  SessionState.STARTED),
     ("finish_session", SessionState.FINISHED),
 ]
 
 
+# ── start_session / finish_session (параметризовано через STATE_SETTERS) ──────
+
 @pytest.mark.parametrize("method_name, target_state", STATE_SETTERS)
 def test_state_setter_changes_state(
-    user_session_repo, user_session,
-    method_name, target_state,
+        user_session_repo, user_session,
+        method_name, target_state,
 ):
     method = getattr(user_session_repo, method_name)
 
@@ -29,8 +29,8 @@ def test_state_setter_changes_state(
 
 @pytest.mark.parametrize("method_name, target_state", STATE_SETTERS)
 def test_state_setter_does_not_affect_other_sessions(
-    user_session_repo, user_session, other_user_session,
-    method_name, target_state,
+        user_session_repo, user_session, other_user_session,
+        method_name, target_state,
 ):
     method = getattr(user_session_repo, method_name)
 
@@ -42,8 +42,8 @@ def test_state_setter_does_not_affect_other_sessions(
 
 @pytest.mark.parametrize("method_name, target_state", STATE_SETTERS)
 def test_state_setter_returns_zero_if_session_not_found(
-    user_session_repo,
-    method_name, target_state,
+        user_session_repo,
+        method_name, target_state,
 ):
     method = getattr(user_session_repo, method_name)
 
@@ -51,6 +51,8 @@ def test_state_setter_returns_zero_if_session_not_found(
 
     assert updated_count == 0
 
+
+# ── set_current_point ─────────────────────────────────────────────────────────
 
 def test_set_current_point_sets_point(user_session_repo, user_session, point):
     updated_count = user_session_repo.set_current_point(user_session.id, point.id)
@@ -61,7 +63,7 @@ def test_set_current_point_sets_point(user_session_repo, user_session, point):
 
 
 def test_set_current_point_does_not_affect_other_sessions(
-    user_session_repo, user_session, other_user_session, point,
+        user_session_repo, user_session, other_user_session, point,
 ):
     user_session_repo.set_current_point(user_session.id, point.id)
 
@@ -75,7 +77,11 @@ def test_set_current_point_returns_zero_if_session_not_found(user_session_repo, 
     assert updated_count == 0
 
 
-def test_get_registered_returns_user_session_with_registered_state(user_session_repo, user, game_session):
+# ── get_registered ────────────────────────────────────────────────────────────
+
+def test_get_registered_returns_user_session_with_registered_state(
+        user_session_repo, user, game_session,
+):
     UserSession.create(user=user, game_session=game_session)
 
     result = user_session_repo.get_registered(user.id)
@@ -120,11 +126,15 @@ def test_get_registered_returns_only_registered_session_for_specified_user(
     assert result.first().user.id == user.id
 
 
+# ── has_non_finished ──────────────────────────────────────────────────────────
+
 @pytest.mark.parametrize("non_finished_state", [
     SessionState.REGISTERED,
     SessionState.STARTED,
 ])
-def test_has_non_finished_returns_true_for_any_non_finished_state(user_session_repo, user_session, non_finished_state):
+def test_has_non_finished_returns_true_for_any_non_finished_state(
+        user_session_repo, user_session, non_finished_state,
+):
     user_session.state = non_finished_state
     user_session.save()
 
@@ -143,7 +153,7 @@ def test_has_non_finished_returns_false_when_no_sessions_exist(user_session_repo
 
 
 def test_has_non_finished_ignores_sessions_of_other_game_session(
-        user_session_repo, user, user_session, other_game_session
+        user_session_repo, user, user_session, other_game_session,
 ):
     user_session.state = SessionState.FINISHED
     user_session.save()
