@@ -136,23 +136,13 @@ def test_increment_clues_used_returns_none_if_limit_reached(point_progress_repo,
 
 # ── create_for_session ────────────────────────────────────────────────────────
 
-def _make_point(game_info, title="Point") -> Point:
-    return Point.create(
-        title=title,
-        location={"link": "https://maps.example.com"},
-        task={"text": "Задание"},
-        answer={"text": "ответ", "type": "text"},
-        after_solved={"text": "Решено"},
-        game_info=game_info,
-    )
-
 
 def test_create_for_session_creates_one_progress_per_point(
-        point_progress_repo, user_session, game_info,
+        point_progress_repo, user_session, make_point
 ):
-    p1 = _make_point(game_info, "P1")
-    p2 = _make_point(game_info, "P2")
-    p3 = _make_point(game_info, "P3")
+    p1 = make_point("P1")
+    p2 = make_point("P2")
+    p3 = make_point("P3")
 
     point_progress_repo.create_for_session(user_session.id, [p1.id, p2.id, p3.id])
 
@@ -160,10 +150,10 @@ def test_create_for_session_creates_one_progress_per_point(
 
 
 def test_create_for_session_links_progress_to_session_and_points(
-        point_progress_repo, user_session, game_info,
+        point_progress_repo, user_session, make_point
 ):
-    p1 = _make_point(game_info, "P1")
-    p2 = _make_point(game_info, "P2")
+    p1 = make_point("P1")
+    p2 = make_point("P2")
 
     point_progress_repo.create_for_session(user_session.id, [p1.id, p2.id])
 

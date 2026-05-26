@@ -16,6 +16,8 @@ from database.repositories.user_event_repository import UserEventRepository
 from database.repositories.game_session_repository import GameSessionRepository
 from database.repositories.user_session_repository import UserSessionRepository
 from database.repositories.point_progress_repository import PointProgressRepository
+from database.repositories.admin_draft_repository import AdminDraftRepository
+from database.repositories.clue_repository import ClueRepository
 
 
 from datetime import datetime, UTC
@@ -150,5 +152,42 @@ def point(game_info):
 
 
 @pytest.fixture
+def make_point(game_info):
+    def _make_point(title="Point"):
+        return Point.create(
+            title=title,
+            location={"link": "https://maps.example.com"},
+            task={"text": "Задание"},
+            answer={"text": "ответ", "type": "text"},
+            after_solved={"text": "Решено"},
+            game_info=game_info,
+        )
+
+    return _make_point
+
+
+@pytest.fixture
 def existing_datetime():
     return datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+
+
+@pytest.fixture
+def admin_draft_repo(test_db):
+    return AdminDraftRepository()
+
+
+@pytest.fixture
+def make_clue(point):
+    def _make_clue(order):
+        return Clue.create(
+            point=point,
+            order=order,
+            text=f"Подсказка №{order}"
+        )
+
+    return _make_clue
+
+
+@pytest.fixture
+def clue_repo(test_db):
+    return ClueRepository()
