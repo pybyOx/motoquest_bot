@@ -14,6 +14,7 @@ from database.models.admin_draft import AdminDraft
 from database.repositories.user_repository import UserRepository
 from database.repositories.user_event_repository import UserEventRepository
 from database.repositories.game_session_repository import GameSessionRepository
+from database.repositories.user_session_repository import UserSessionRepository
 
 from datetime import datetime
 
@@ -103,3 +104,29 @@ def user_session(user, game_session):
 @pytest.fixture
 def other_user_session(other_user, game_session):
     return UserSession.create(user=other_user, game_session=game_session)
+
+
+@pytest.fixture
+def user_session_repo(test_db):
+    return UserSessionRepository()
+
+
+@pytest.fixture
+def game_info(test_db):
+    return GameInfo.create(
+        title="Test Quest",
+        slug="test-quest",
+        finish={"text": "Финиш", "link": "https://example.com"},
+    )
+
+
+@pytest.fixture
+def point(game_info):
+    return Point.create(
+        title="Точка 1",
+        location={"link": "https://maps.example.com"},
+        task={"text": "Задание"},
+        answer={"text": "ответ", "type": "text"},
+        after_solved={"text": "Решено"},
+        game_info=game_info,
+    )
