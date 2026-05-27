@@ -76,7 +76,7 @@ pip install -r requirements.txt
 
 **2. Настроить переменные окружения**
 
-Скопируй `.env.template` в `.env` и заполни значения:
+Скопируй `.env.example` в `.env` и заполни значения:
 
 ```
 BOT_TOKEN=токен_бота

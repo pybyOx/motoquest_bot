@@ -76,7 +76,7 @@ pip install -r requirements.txt
 
 **2. Configure environment**
 
-Copy `.env.template` to `.env` and fill in the values:
+Copy `.env.example` to `.env` and fill in the values:
 
 ```
 BOT_TOKEN=your_telegram_bot_token
