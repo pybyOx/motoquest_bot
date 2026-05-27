@@ -7,7 +7,7 @@ import atexit
 from core.container import get_container
 
 logging.basicConfig(
-    level=logging.DEBUG,  # Минимальный уровень логирования
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",  # Формат логов
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.FileHandler("bot.log", encoding='utf-8'),
@@ -29,8 +29,8 @@ if __name__ == "__main__":
 
     # create_game(file_path="games_data/way_of_the_dragon/game_dragon.json")
     # set_admin(395578226)
-    # recover_user(795176222)  # Рома
-    recover_user(395578226)  # Оксана
+    # recover_user(795176222)
+    # recover_user(395578226)
 
     atexit.register(close_db)
     get_container().bot.infinity_polling()
