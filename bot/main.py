@@ -27,11 +27,6 @@ if __name__ == "__main__":
     setup_db()
     create_models()
 
-    # create_game(file_path="games_data/way_of_the_dragon/game_dragon.json")
-    # set_admin(395578226)
-    # recover_user(795176222)
-    # recover_user(395578226)
-
     atexit.register(close_db)
     get_container().bot.infinity_polling()
 
