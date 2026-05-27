@@ -28,6 +28,8 @@ class CallBackType(StrEnum):
 
     START_SESSION = "start_session"
     DELETE_SESSION = "delete_session"
+    MARK_ABSENT = "mark_absent"
+    CONFIRM_ATTENDANCE = "confirm_attendance"
 
     REGISTRATION = "registration"
     CANCEL = "cancel"

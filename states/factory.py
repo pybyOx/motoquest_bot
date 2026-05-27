@@ -5,6 +5,7 @@ from .game_states.waiting_answer import WaitingAnswerState
 from .game_states.waiting_review import WaitingReviewState
 from .idle import IDLEState
 from .admin_states.manage_session_states.action_choice import ActionChoiceState
+from .admin_states.manage_session_states.attendance_check import AttendanceCheckState
 from .admin_states.manage_session_states.session_choice import SessionChoiceState
 from .admin_states.creation_session_states.city_choice import CityChoiceState
 from .admin_states.creation_session_states.date_choice import DateChoiceState
@@ -46,6 +47,7 @@ class StateFactory:
 
             UserState.choice_session: SessionChoiceState,
             UserState.choice_action: ActionChoiceState,
+            UserState.attendance_check: AttendanceCheckState,
 
             UserState.confirmation: CreateConfirmationState,
         }

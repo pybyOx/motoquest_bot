@@ -21,5 +21,6 @@ class UserState(StrEnum):
 
     choice_session = "choice_session"
     choice_action = "choice_action"
+    attendance_check = "attendance_check"
 
     confirmation = "confirmation"

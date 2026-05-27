@@ -201,6 +201,35 @@ def confirm_create_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def attendance_keyboard(user_sessions: list) -> InlineKeyboardMarkup:
+    """
+    Клавиатура проверки присутствия.
+
+    Кнопки:
+    -------
+    - "🚫 @username (id)" per player (callback_data="{CallBackType.MARK_ABSENT}:{us.id}")
+    - "✅ Запустить игру (N)" (callback_data="{CallBackType.CONFIRM_ATTENDANCE}")
+    - "❌ Отмена" (callback_data="{CallBackType.CANCEL_ACTION}")
+    """
+    markup = InlineKeyboardMarkup(row_width=1)
+    for us in user_sessions:
+        markup.add(InlineKeyboardButton(
+            text=f"🚫 {us.user}",
+            callback_data=f"{CallBackType.MARK_ABSENT}:{us.id}"
+        ))
+    markup.add(
+        InlineKeyboardButton(
+            text=f"✅ Запустить игру ({len(user_sessions)})",
+            callback_data=CallBackType.CONFIRM_ATTENDANCE
+        ),
+        InlineKeyboardButton(
+            text="❌ Отмена",
+            callback_data=CallBackType.CANCEL_ACTION
+        )
+    )
+    return markup
+
+
 def arrived_keyboard() -> InlineKeyboardMarkup:
     """
     Клавиатура прибытия на локацию.

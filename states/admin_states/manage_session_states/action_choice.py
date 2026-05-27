@@ -3,12 +3,10 @@ from __future__ import annotations
 import logging
 
 from peewee import ModelSelect
-from database.db import db
 from core.enums.callback_types import CallBackType
 from keyboards import combine_keyboards, cancel_or_back_keyboard, start_or_delete_keyboard
 from states.base_state import BaseUserState
 from core.enums.user_states import UserState
-from core.exceptions import AlreadyExistsError
 from core.enums.session_states import SessionState
 from core.enums.user_event_types import UserEventType
 from typing import TYPE_CHECKING, Callable, Any
@@ -56,46 +54,12 @@ class ActionChoiceState(BaseUserState):
             return
 
         if callback_type == CallBackType.START_SESSION:
-            self.handle_start_session(user_id, game_session, related_sessions)
+            self._state.transition(user_id, UserState.attendance_check)
+            self._state.render(user_id, UserState.attendance_check)
         elif callback_type == CallBackType.DELETE_SESSION:
             self.handle_delete_session(user_id, game_session, related_sessions)
         else:
             logging.warning(f"Unexpected callback {callback_type} for state {ctx.user_state}")
-
-    def handle_start_session(self, admin_id: int, game_session: GameSession, related_sessions: ModelSelect) -> None:
-        try:
-            for us in related_sessions:
-
-                user_id, user_session_id = us.user.id, us.id
-
-                if us.state != SessionState.REGISTERED:
-                    continue
-
-                with db.atomic():
-                    self._user.update_current_session(
-                        user_id=user_id,
-                        user_session_id=user_session_id
-                    )
-                    self._user_session.start_session(
-                        user_session_id=user_session_id
-                    )
-                    self._point_progress.create_for_session(
-                        user_session_id=user_session_id,
-                        point_ids=[point.id for point in game_session.game_info.points]
-                    )
-                    self._state.transition(user_id, UserState.waiting_location)
-
-                self._state.render(
-                    user_id,
-                    UserState.waiting_location,
-                    f"{us.game_session}\nИгра началась!"
-                )
-
-        except AlreadyExistsError:
-            text = f"⚠️ Игра {game_session} уже была начата или данные старта (прогресс по точкам) уже существуют."
-        else:
-            text = f"✅ Игра {game_session} успешно стартовала."
-        self._finish_admin_action(admin_id, text)
 
     def handle_delete_session(self, admin_id: int, game_session: GameSession, related_sessions: ModelSelect) -> None:
 
