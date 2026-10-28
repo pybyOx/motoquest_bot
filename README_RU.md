@@ -1,5 +1,7 @@
 # Motokvest Bot
 
+[![tests](https://github.com/pybyOx/motoquest_bot/actions/workflows/tests.yml/badge.svg)](https://github.com/pybyOx/motoquest_bot/actions/workflows/tests.yml)
+
 Telegram-бот для проведения мотоквестов. Игроки получают локации, добираются до точек, решают задания и получают обратную связь от инспектора — всё через Telegram.
 
 [English version](README.md)

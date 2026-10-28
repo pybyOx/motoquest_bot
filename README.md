@@ -1,5 +1,7 @@
 # Motokvest Bot
 
+[![tests](https://github.com/pybyOx/motoquest_bot/actions/workflows/tests.yml/badge.svg)](https://github.com/pybyOx/motoquest_bot/actions/workflows/tests.yml)
+
 A Telegram bot for running motorcycle quest games. Players navigate between checkpoints, solve location-based tasks, and receive real-time inspector feedback — all through Telegram.
 
 [Русская версия](README_RU.md)
