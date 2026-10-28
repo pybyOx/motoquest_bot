@@ -1,0 +1,25 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Create test .env
+        run: |
+          printf 'BOT_TOKEN=test-token\nMAIN_ADMIN_ID=1\nADMIN_IDS=1\nINSPECTOR_ID=2\n' > .env
+
+      - run: pytest -q
