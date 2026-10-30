@@ -23,7 +23,7 @@ A Telegram bot for running motorcycle quest games. Players navigate between chec
 | ORM / Database | Peewee 3.18.2 + SQLite |
 | Config | python-dotenv |
 | Validation | jsonschema |
-| Tests | pytest 9.0.3 — 119 tests |
+| Tests | pytest 9.0.3 — 128 tests |
 
 ## Architecture
 
@@ -54,14 +54,14 @@ motokvest_bot/
 │   └── utils/              # Input validation helpers
 ├── database/
 │   ├── models/             # Peewee models (User, GameSession, PointProgress, ...)
-│   └── repositories/       # 9 repositories (BaseRepository + domain-specific)
+│   └── repositories/       # BaseRepository + 9 domain repositories
 ├── decorators/             # with_context, error_guard, log_exceptions
 ├── games_data/             # Game content in JSON + media files
 ├── handlers/               # Telegram message and callback routers
 ├── presenters/             # Text and keyboard builders
 ├── services/               # Business logic (AdminHandler, InspectorHandler, UIService, ...)
 ├── states/                 # State machine: BaseUserState, StateFactory, all state classes
-└── tests/                  # pytest suite: 119 tests across 9 test files
+└── tests/                  # pytest suite: 128 tests across 10 test files
 ```
 
 ## Setup
@@ -83,7 +83,6 @@ Copy `.env.example` to `.env` and fill in the values:
 ```
 BOT_TOKEN=your_telegram_bot_token
 MAIN_ADMIN_ID=telegram_user_id
-ADMIN_IDS=id1,id2         # comma-separated, can be empty
 INSPECTOR_ID=telegram_user_id
 ```
 

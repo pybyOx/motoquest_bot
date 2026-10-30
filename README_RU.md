@@ -23,7 +23,7 @@ Telegram-бот для проведения мотоквестов. Игроки
 | ORM / База данных | Peewee 3.18.2 + SQLite |
 | Конфигурация | python-dotenv |
 | Валидация | jsonschema |
-| Тесты | pytest 9.0.3 — 119 тестов |
+| Тесты | pytest 9.0.3 — 128 тестов |
 
 ## Архитектура
 
@@ -54,14 +54,14 @@ motokvest_bot/
 │   └── utils/              # Вспомогательные функции валидации
 ├── database/
 │   ├── models/             # Peewee-модели (User, GameSession, PointProgress, ...)
-│   └── repositories/       # 9 репозиториев (BaseRepository + доменные)
+│   └── repositories/       # BaseRepository + 9 доменных репозиториев
 ├── decorators/             # with_context, error_guard, log_exceptions
 ├── games_data/             # Контент квестов в JSON + медиафайлы
 ├── handlers/               # Роутеры сообщений и callback-ов
 ├── presenters/             # Построители текстов и клавиатур
 ├── services/               # Бизнес-логика (AdminHandler, InspectorHandler, UIService, ...)
 ├── states/                 # State Machine: BaseUserState, StateFactory, классы состояний
-└── tests/                  # pytest: 119 тестов в 9 файлах
+└── tests/                  # pytest: 128 тестов в 10 файлах
 ```
 
 ## Установка
@@ -83,7 +83,6 @@ pip install -r requirements.txt
 ```
 BOT_TOKEN=токен_бота
 MAIN_ADMIN_ID=telegram_user_id
-ADMIN_IDS=id1,id2         # через запятую, можно оставить пустым
 INSPECTOR_ID=telegram_user_id
 ```
 
