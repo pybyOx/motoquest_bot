@@ -2,6 +2,8 @@ from unittest.mock import MagicMock, patch
 from telebot.apihelper import ApiTelegramException
 from services.ui_service import UIService
 
+INSPECTOR_ID = 555
+
 
 # ── send_msg ───────────────────────────────────────────────────────────
 
@@ -10,7 +12,7 @@ def test_send_msg_returns_message_id():
     bot.send_message.return_value.message_id = 99
     user_repo = MagicMock()
 
-    service = UIService(bot=bot, user_repo=user_repo)
+    service = UIService(bot=bot, user_repo=user_repo, inspector_id=INSPECTOR_ID)
 
     result = service.send_msg(chat_id=123, text="привет")
 
@@ -29,7 +31,7 @@ def test_send_msg_returns_message_id():
 def test_show_user_ui_edit_success():
     bot = MagicMock()
     user_repo = MagicMock()
-    service = UIService(bot=bot, user_repo=user_repo)
+    service = UIService(bot=bot, user_repo=user_repo, inspector_id=INSPECTOR_ID)
 
     user = MagicMock()
     user.id = 1
@@ -61,7 +63,7 @@ def test_show_user_ui_edit_fell():
     user.id = 1
     user.ui_msg_id = 100
 
-    service = UIService(bot=bot, user_repo=user_repo)
+    service = UIService(bot=bot, user_repo=user_repo, inspector_id=INSPECTOR_ID)
 
     service.show_user_ui(user, "текст")
 
@@ -100,7 +102,7 @@ def test_show_user_ui_cas_failed_deletes_duplicate():
     user.id = 1
     user.ui_msg_id = 100
 
-    service = UIService(bot=bot, user_repo=user_repo)
+    service = UIService(bot=bot, user_repo=user_repo, inspector_id=INSPECTOR_ID)
 
     service.show_user_ui(user, "текст")
 
@@ -137,7 +139,7 @@ def test_show_user_ui_no_existing_msg_sends_new():
     user.id = 1
     user.ui_msg_id = None
 
-    service = UIService(bot=bot, user_repo=user_repo)
+    service = UIService(bot=bot, user_repo=user_repo, inspector_id=INSPECTOR_ID)
 
     service.show_user_ui(user, "текст")
 
@@ -161,7 +163,7 @@ def test_show_user_ui_no_existing_msg_sends_new():
 def test_send_location_with_msg_id_edits():
     bot = MagicMock()
     bot.edit_message_text.return_value.message_id = 100
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     result = service.send_location(chat_id=1, location="ссылка", msg_id=100)
 
@@ -177,7 +179,7 @@ def test_send_location_with_msg_id_edits():
 def test_send_location_without_msg_id_sends():
     bot = MagicMock()
     bot.send_message.return_value.message_id = 55
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     result = service.send_location(chat_id=1, location="ссылка")
 
@@ -194,7 +196,7 @@ def test_send_location_without_msg_id_sends():
 
 def test_answer_callback_calls_bot():
     bot = MagicMock()
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     service.answer_callback(callback_id=42, text="ок")
 
@@ -207,7 +209,7 @@ def test_answer_callback_calls_bot():
 
 def test_answer_callback_none_id_does_nothing():
     bot = MagicMock()
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     service.answer_callback(callback_id=None, text="ок")
 
@@ -219,7 +221,7 @@ def test_answer_callback_none_id_does_nothing():
 def test_send_photo_returns_message_id():
     bot = MagicMock()
     bot.send_photo.return_value.message_id = 77
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     with patch("builtins.open", MagicMock()):
         result = service.send_photo(chat_id=1, text="фото", image_path="img.jpg")
@@ -232,7 +234,7 @@ def test_send_photo_returns_message_id():
 def test_send_audio_returns_message_id():
     bot = MagicMock()
     bot.send_audio.return_value.message_id = 88
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     with patch("builtins.open", MagicMock()):
         result = service.send_audio(chat_id=1, audio_path="audio.mp3")
@@ -246,7 +248,7 @@ def test_send_audio_returns_message_id():
 def test_send_player_answer_copies_and_sends():
     bot = MagicMock()
     bot.copy_message.return_value.message_id = 300
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     point = MagicMock()
     point.answer = {"type": "текст", "text": "42"}
@@ -264,7 +266,7 @@ def test_send_player_answer_copies_and_sends():
 
 def test_send_player_problem_sends_to_inspector():
     bot = MagicMock()
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     service.send_player_problem(
         problem_msg="сломалось", user_id=1, username="ox", full_name="Оксана"
@@ -278,7 +280,7 @@ def test_send_player_problem_sends_to_inspector():
 
 def test_delete_ui_keyboard_calls_edit():
     bot = MagicMock()
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     service.delete_ui_keyboard(chat_id=1, msg_id=50)
 
@@ -287,7 +289,7 @@ def test_delete_ui_keyboard_calls_edit():
 
 def test_delete_ui_keyboard_none_msg_id_does_nothing():
     bot = MagicMock()
-    service = UIService(bot=bot, user_repo=MagicMock())
+    service = UIService(bot=bot, user_repo=MagicMock(), inspector_id=INSPECTOR_ID)
 
     service.delete_ui_keyboard(chat_id=1, msg_id=None)
 

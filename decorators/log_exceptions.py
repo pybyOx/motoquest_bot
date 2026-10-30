@@ -2,7 +2,7 @@ from __future__ import annotations
 from functools import wraps
 import logging
 from core.container import get_container
-from config_data.config import MAIN_ADMIN_ID
+from config_data.config import get_config
 from typing import TYPE_CHECKING
 
 
@@ -51,7 +51,7 @@ def log_exceptions():
                 logging.critical(f"[{user_id}] recovery failed окончательно. Требуется ручной recovery.")
 
                 ui_service.send_msg(
-                    chat_id=MAIN_ADMIN_ID,
+                    chat_id=get_config().main_admin_id,
                     text=f"{user_id}: требуется ручной recovery"
                 )
                 ui_service.show_user_ui(

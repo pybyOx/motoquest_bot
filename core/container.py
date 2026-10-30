@@ -1,5 +1,5 @@
 from telebot import TeleBot
-from config_data import config
+from config_data.config import get_config
 
 # repositories
 from database.repositories.user_repository import UserRepository
@@ -34,7 +34,8 @@ def get_container():
 class Container:
     def __init__(self):
         # --- infra ---
-        self.bot = TeleBot(token=config.BOT_TOKEN)
+        self.config = get_config()
+        self.bot = TeleBot(token=self.config.bot_token)
 
         # --- repositories ---
         self.user_repo = UserRepository()
@@ -55,6 +56,7 @@ class Container:
         self.ui_service = UIService(
             bot=self.bot,
             user_repo=self.user_repo,
+            inspector_id=self.config.inspector_id,
         )
 
         self.game_guard = GameGuard(self.point_progress_repo)

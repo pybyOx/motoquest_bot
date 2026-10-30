@@ -1,3 +1,4 @@
+import logging
 
 
 class AlreadyExistsError(Exception):
@@ -23,3 +24,8 @@ class GameInvariantError(RuntimeError):
     POINT_PROGRESS_REQUIRED = "Отсутствует PointProgress внутри активной игровой сессии."
     CURRENT_POINT_REQUIRED = "Отсутствует текущая Point внутри активной игровой сессии."
     GAME_STATE_REQUIRED = "Отсутствует GameState внутри активной игровой сессии."
+
+
+class ConfigError(Exception):
+    """Ошибка сборки конфига"""
+    pass

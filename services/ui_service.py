@@ -1,6 +1,5 @@
 from __future__ import annotations
 from telebot.apihelper import ApiTelegramException
-from config_data.config import INSPECTOR_ID
 from presenters.telegram.user_answer_presenter import build_answer_text
 from presenters.telegram.user_problem_presenter import build_problem_text
 from presenters.telegram.build_data_text import build_data_text
@@ -23,9 +22,11 @@ class UIService:
             self,
             bot: TeleBot,
             user_repo: UserRepository,
+            inspector_id: int,
     ):
         self.bot = bot
         self.user_repo = user_repo
+        self.inspector_id = inspector_id
 
     def send_msg(
             self,
@@ -228,12 +229,12 @@ class UIService:
             user_info=f"{user_str}"
         )
         msg = self.bot.copy_message(
-            chat_id=INSPECTOR_ID,
+            chat_id=self.inspector_id,
             from_chat_id=chat_id,
             message_id=msg_id
         )
         self.bot.send_message(
-            chat_id=INSPECTOR_ID,
+            chat_id=self.inspector_id,
             text=text,
             reply_to_message_id=msg.message_id,
             reply_markup=review_keyboard(point_progress_id=point_progress_id))
@@ -252,7 +253,7 @@ class UIService:
             full_name=full_name,
         )
         self.bot.send_message(
-            chat_id=INSPECTOR_ID,
+            chat_id=self.inspector_id,
             text=text,
             parse_mode="HTML"
         )
