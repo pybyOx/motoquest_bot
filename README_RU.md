@@ -20,10 +20,10 @@ Telegram-бот для проведения мотоквестов. Игроки
 | Слой | Инструменты |
 |---|---|
 | Telegram | pyTelegramBotAPI 4.29.1 |
-| ORM / База данных | Peewee 3.18.2 + SQLite |
+| ORM / База данных | Peewee 3.18.2 + PostgreSQL 17 |
 | Конфигурация | python-dotenv |
 | Валидация | jsonschema |
-| Тесты | pytest 9.0.3 — 128 тестов |
+| Тесты | pytest 9.0.3 — 137 тестов |
 
 ## Архитектура
 
@@ -36,7 +36,7 @@ Telegram-бот для проведения мотоквестов. Игроки
 Класс `Container` собирает все зависимости (бот, репозитории, сервисы) при запуске в одном месте. Ничего не инициализируется на уровне импортов. `get_container()` возвращает синглтон. Граф зависимостей явный и легко тестируется.
 
 **Repository Pattern** (`database/repositories/`)  
-Девять репозиториев оборачивают Peewee-модели и предоставляют методы с понятными именами. Бизнес-логика никогда не работает с ORM-запросами напрямую. В тестах репозитории работают с базой SQLite в памяти — моки слоя данных не нужны.
+Репозитории оборачивают Peewee-модели и предоставляют методы с понятными именами. Бизнес-логика никогда не работает с ORM-запросами напрямую. В тестах репозитории работают с настоящим PostgreSQL — моки слоя данных не нужны.
 
 Ещё паттерны: декораторы для сквозной логики (`with_context`, `error_guard`, `log_exceptions`), DTO-объекты для передачи данных между слоями, compare-and-swap в `UserRepository` для защиты от гонок при многопоточном polling-е pyTelegramBotAPI.
 
@@ -54,14 +54,14 @@ motokvest_bot/
 │   └── utils/              # Вспомогательные функции валидации
 ├── database/
 │   ├── models/             # Peewee-модели (User, GameSession, PointProgress, ...)
-│   └── repositories/       # BaseRepository + 9 доменных репозиториев
+│   └── repositories/       # BaseRepository + доменные репозитории
 ├── decorators/             # with_context, error_guard, log_exceptions
 ├── games_data/             # Контент квестов в JSON + медиафайлы
 ├── handlers/               # Роутеры сообщений и callback-ов
 ├── presenters/             # Построители текстов и клавиатур
 ├── services/               # Бизнес-логика (AdminHandler, InspectorHandler, UIService, ...)
 ├── states/                 # State Machine: BaseUserState, StateFactory, классы состояний
-└── tests/                  # pytest: 128 тестов в 10 файлах
+└── tests/                  # pytest: репозитории, сервисы, конфиг
 ```
 
 ## Установка
@@ -74,6 +74,7 @@ cd motoquest_bot
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+docker compose up -d        # PostgreSQL на порту 5433
 ```
 
 **2. Настроить переменные окружения**
@@ -82,6 +83,7 @@ pip install -r requirements.txt
 
 ```
 BOT_TOKEN=токен_бота
+DATABASE_URL=postgresql://quest:quest@localhost:5433/quest
 MAIN_ADMIN_ID=telegram_user_id
 INSPECTOR_ID=telegram_user_id
 ```
@@ -112,7 +114,16 @@ python -m bot.main
 pytest
 ```
 
-Все тесты используют SQLite в памяти и не требуют внешних сервисов.
+Тестам нужна поднятая база — та же, что и боту:
+
+```bash
+docker compose up -d
+```
+
+Тесты идут в отдельной базе `quest_test`: она создаётся автоматически при первом
+запуске. Каждый тест выполняется внутри транзакции, которая в конце откатывается,
+поэтому данные между тестами не протекают. Адрес базы можно переопределить
+переменной `TEST_DATABASE_URL`.
 
 ## Роли
 

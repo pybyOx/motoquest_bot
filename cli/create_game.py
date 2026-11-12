@@ -9,16 +9,16 @@ from core.exceptions import AlreadyExistsError, CliInputError
 from core.utils.check_data import (get_data_from_argv,
                                    validate_game_json, validate_media_files)
 from core.container import get_container
-
-
-container = get_container()
-game_info_repo = container.game_info_repo
-point_repo = container.point_repo
-clue_repo = container.clue_repo
+from database.lifecycle import setup_db
 
 
 def create_game(file_path: str) -> None:
     logging.info("___Создание GameInfo___")
+
+    container = get_container()
+    game_info_repo = container.game_info_repo
+    point_repo = container.point_repo
+    clue_repo = container.clue_repo
 
     game_info = None
 
@@ -83,10 +83,12 @@ def create_game(file_path: str) -> None:
         logging.info(f"Информация о игре '{game_info}' успешно занесена в базу данных.")
 
 
-if __name__ == "__main__":
-    """
-    Пример использования:
-    python -m cli.create_game games_data/way_of_the_dragon/game_dragon.json
-    """
+def main() -> None:
+    """Точка входа команды: python -m cli.create_game <путь к json>"""
+    setup_db()
     path = get_data_from_argv(length=2, index=1)
     create_game(path)
+
+
+if __name__ == "__main__":
+    main()
