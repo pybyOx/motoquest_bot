@@ -1,9 +1,9 @@
-from peewee import AutoField, ForeignKeyField, DateTimeField, IntegerField, BooleanField
+from peewee import AutoField, ForeignKeyField, IntegerField, BooleanField
 
 from database.models.base import BaseModel
 from database.models.user_session import UserSession
 from database.models.point import Point
-from playhouse.sqlite_ext import JSONField
+from playhouse.postgres_ext import BinaryJSONField, DateTimeTZField
 
 
 class PointProgress(BaseModel):
@@ -14,12 +14,12 @@ class PointProgress(BaseModel):
     point = ForeignKeyField(Point, backref="users_progress", null=True, on_delete="SET NULL")
     # Point.users_progress — все PointProgress с конкретным Point
 
-    started_at = DateTimeField(null=True)
-    finished_at = DateTimeField(null=True)
+    started_at = DateTimeTZField(null=True)
+    finished_at = DateTimeTZField(null=True)
 
-    location_msg_ids = JSONField(default=dict)
-    task_msg_ids = JSONField(default=dict)
-    solved_msg_ids = JSONField(default=dict)
+    location_msg_ids = BinaryJSONField(default=dict)
+    task_msg_ids = BinaryJSONField(default=dict)
+    solved_msg_ids = BinaryJSONField(default=dict)
 
     clues_used = IntegerField(default=0)
     is_finished = BooleanField(default=False)

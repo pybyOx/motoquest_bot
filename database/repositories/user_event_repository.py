@@ -15,8 +15,10 @@ class UserEventRepository(BaseRepository[UserEvent]):
         :return: True — если сообщение нужно отправить
                  False — если уже было отправлено
         """
+        db = self.model._meta.database
         try:
-            self.model.create(user_session=user_session_id, event_type=event_type)
+            with db.atomic():
+                self.model.create(user_session=user_session_id, event_type=event_type)
             return True
         except IntegrityError:
             return False

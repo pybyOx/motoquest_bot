@@ -1,5 +1,5 @@
 from peewee import AutoField, ForeignKeyField, CharField
-from playhouse.sqlite_ext import JSONField
+from playhouse.postgres_ext import BinaryJSONField
 
 from core.enums.session_states import SessionState
 from database.models.base import BaseModel
@@ -21,7 +21,7 @@ class UserSession(BaseModel):
         choices=[(s, s) for s in SessionState],
         default=SessionState.REGISTERED
     )
-    finish_msg_ids = JSONField(default=dict)
+    finish_msg_ids = BinaryJSONField(default=dict)
 
     class Meta:
         indexes = (

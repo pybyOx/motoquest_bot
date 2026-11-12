@@ -16,7 +16,7 @@ def clean_env(monkeypatch):
     переменную проходил бы в CI, но падал локально.
     """
     monkeypatch.setattr(config, "load_dotenv", lambda *args, **kwargs: False)
-    for name in ("BOT_TOKEN", "MAIN_ADMIN_ID", "INSPECTOR_ID"):
+    for name in ("BOT_TOKEN", "MAIN_ADMIN_ID", "INSPECTOR_ID", "DATABASE_URL"):
         monkeypatch.delenv(name, raising=False)
     get_config.cache_clear()
     yield
@@ -34,17 +34,29 @@ def test_load_config_reads_all_values(monkeypatch):
     set_env(
         monkeypatch,
         BOT_TOKEN="123:abc",
+        DATABASE_URL="postgresql://u:p@localhost:5432/db",
         MAIN_ADMIN_ID="42",
         INSPECTOR_ID="7",
     )
 
     cfg = load_config()
 
-    assert cfg == Config(bot_token="123:abc", main_admin_id=42, inspector_id=7)
+    assert cfg == Config(
+        bot_token="123:abc",
+        database_url="postgresql://u:p@localhost:5432/db",
+        main_admin_id=42,
+        inspector_id=7,
+    )
 
 
 def test_load_config_converts_ids_to_int(monkeypatch):
-    set_env(monkeypatch, BOT_TOKEN="t", MAIN_ADMIN_ID="42", INSPECTOR_ID="7")
+    set_env(
+        monkeypatch,
+        BOT_TOKEN="t",
+        DATABASE_URL="postgresql://u:p@h/db",
+        MAIN_ADMIN_ID="42",
+        INSPECTOR_ID="7",
+    )
 
     cfg = load_config()
 
@@ -52,9 +64,15 @@ def test_load_config_converts_ids_to_int(monkeypatch):
     assert isinstance(cfg.inspector_id, int)
 
 
-@pytest.mark.parametrize("missing", ["BOT_TOKEN", "MAIN_ADMIN_ID", "INSPECTOR_ID"])
+@pytest.mark.parametrize("missing", ["BOT_TOKEN", "DATABASE_URL", "MAIN_ADMIN_ID", "INSPECTOR_ID"])
 def test_load_config_missing_variable_raises(monkeypatch, missing):
-    set_env(monkeypatch, BOT_TOKEN="t", MAIN_ADMIN_ID="1", INSPECTOR_ID="2")
+    set_env(
+        monkeypatch,
+        BOT_TOKEN="t",
+        DATABASE_URL="postgresql://u:p@h/db",
+        MAIN_ADMIN_ID="1",
+        INSPECTOR_ID="2",
+    )
     monkeypatch.delenv(missing)
 
     with pytest.raises(ConfigError) as err:
@@ -65,7 +83,13 @@ def test_load_config_missing_variable_raises(monkeypatch, missing):
 
 @pytest.mark.parametrize("name", ["MAIN_ADMIN_ID", "INSPECTOR_ID"])
 def test_load_config_non_numeric_id_raises(monkeypatch, name):
-    set_env(monkeypatch, BOT_TOKEN="t", MAIN_ADMIN_ID="1", INSPECTOR_ID="2")
+    set_env(
+        monkeypatch,
+        BOT_TOKEN="t",
+        DATABASE_URL="postgresql://u:p@h/db",
+        MAIN_ADMIN_ID="1",
+        INSPECTOR_ID="2",
+    )
     monkeypatch.setenv(name, "не-число")
 
     with pytest.raises(ConfigError) as err:
@@ -77,7 +101,12 @@ def test_load_config_non_numeric_id_raises(monkeypatch, name):
 # ── Config ───────────────────────────────────────────────────────────
 
 def test_config_is_immutable():
-    cfg = Config(bot_token="t", main_admin_id=1, inspector_id=2)
+    cfg = Config(
+        bot_token="t",
+        database_url="postgresql://u:p@h/db",
+        main_admin_id=1,
+        inspector_id=2,
+    )
 
     with pytest.raises(dataclasses.FrozenInstanceError):
         cfg.bot_token = "другой"
@@ -86,7 +115,13 @@ def test_config_is_immutable():
 # ── get_config ───────────────────────────────────────────────────────────
 
 def test_get_config_reads_environment_once(monkeypatch):
-    set_env(monkeypatch, BOT_TOKEN="первый", MAIN_ADMIN_ID="1", INSPECTOR_ID="2")
+    set_env(
+        monkeypatch,
+        BOT_TOKEN="первый",
+        DATABASE_URL="postgresql://u:p@h/db",
+        MAIN_ADMIN_ID="1",
+        INSPECTOR_ID="2",
+    )
 
     first = get_config()
     monkeypatch.setenv("BOT_TOKEN", "второй")

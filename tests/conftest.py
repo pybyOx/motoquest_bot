@@ -1,5 +1,10 @@
+import os
+
+import psycopg2
 import pytest
-from playhouse.sqlite_ext import SqliteExtDatabase
+from playhouse.postgres_ext import PostgresqlExtDatabase
+
+from database.db import database_params
 
 from database.models.user import User
 from database.models.user_session import UserSession
@@ -35,9 +40,36 @@ ALL_MODELS = [
 ]
 
 
-@pytest.fixture
-def test_db():
-    db = SqliteExtDatabase(":memory:", pragmas={"foreign_keys": 1})
+# Локально — контейнер из docker-compose.yml (порт 5433),
+# в CI адрес приходит из переменной окружения (порт 5432).
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL", "postgresql://quest:quest@localhost:5433/quest_test"
+)
+
+
+def _create_database_if_missing(url: str) -> None:
+    """Создаёт тестовую базу, если её ещё нет.
+
+    Подключаемся к служебной базе postgres: создать базу, находясь внутри
+    неё самой, нельзя. autocommit обязателен — CREATE DATABASE не выполняется
+    внутри транзакции.
+    """
+    params = database_params(url)
+    name = params.pop("database")
+    conn = psycopg2.connect(dbname="postgres", **params)
+    conn.autocommit = True
+    with conn.cursor() as cursor:
+        cursor.execute("select 1 from pg_database where datname = %s", (name,))
+        if cursor.fetchone() is None:
+            cursor.execute(f'create database "{name}"')
+    conn.close()
+
+
+@pytest.fixture(scope="session")
+def database():
+    """Одна база на весь прогон: схема создаётся и удаляется один раз."""
+    _create_database_if_missing(TEST_DATABASE_URL)
+    db = PostgresqlExtDatabase(**database_params(TEST_DATABASE_URL))
     db.bind(ALL_MODELS, bind_refs=False, bind_backrefs=False)
     db.connect()
     db.create_tables(ALL_MODELS)
@@ -46,6 +78,17 @@ def test_db():
 
     db.drop_tables(ALL_MODELS)
     db.close()
+
+
+@pytest.fixture
+def test_db(database):
+    """Каждый тест идёт внутри транзакции, которая в конце откатывается.
+
+    Данные теста видны ему самому, но в базе после него не остаются.
+    """
+    with database.atomic() as transaction:
+        yield database
+        transaction.rollback()
 
 
 @pytest.fixture

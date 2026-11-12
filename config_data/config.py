@@ -34,6 +34,7 @@ def _require_int(name: str) -> int:
 @dataclass(frozen=True)
 class Config:
     bot_token: str
+    database_url: str
     main_admin_id: int
     inspector_id: int
 
@@ -43,6 +44,7 @@ def load_config() -> Config:
     load_dotenv()
     return Config(
         bot_token=_require("BOT_TOKEN"),
+        database_url=_require("DATABASE_URL"),
         main_admin_id=_require_int("MAIN_ADMIN_ID"),
         inspector_id=_require_int("INSPECTOR_ID"),
     )

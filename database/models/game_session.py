@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import cast
 from presenters.telegram.utc_for_user import format_utc_for_user
-from peewee import AutoField, ForeignKeyField, CharField, DateTimeField, BooleanField
+from peewee import AutoField, ForeignKeyField, CharField, BooleanField
+from playhouse.postgres_ext import DateTimeTZField
 
 from database.models.base import BaseModel
 from database.models.game_info import GameInfo
@@ -15,7 +16,7 @@ class GameSession(BaseModel):
     # GameInfo.games - список всех GameSession c информацией GameInfo
     city = CharField(null=True)  # город проведения игры
     location = CharField()  # место встречи
-    date = DateTimeField()  # время встречи
+    date = DateTimeTZField()  # время встречи
     timezone = CharField(null=True)
 
     finished = BooleanField(default=False)

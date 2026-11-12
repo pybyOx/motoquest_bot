@@ -43,7 +43,7 @@ def test_start_progress_sets_started_at(point_progress_repo, point_progress, exi
 
     point_progress_from_db = point_progress_repo.get_by_id(point_progress.id)
     assert updated_count == 1
-    assert datetime.fromisoformat(point_progress_from_db.started_at) == existing_datetime
+    assert point_progress_from_db.started_at == existing_datetime
 
 
 def test_start_progress_uses_current_time_by_default(point_progress_repo, point_progress):
@@ -51,7 +51,7 @@ def test_start_progress_uses_current_time_by_default(point_progress_repo, point_
 
     point_progress_from_db = point_progress_repo.get_by_id(point_progress.id)
     assert updated_count == 1
-    assert isinstance(datetime.fromisoformat(point_progress_from_db.started_at), datetime)
+    assert isinstance(point_progress_from_db.started_at, datetime)
 
 
 def test_start_progress_does_not_affect_other_point_progresses(
@@ -78,7 +78,7 @@ def test_finish_progress_sets_finished_at_and_is_finished(
 
     point_progress_from_db = point_progress_repo.get_by_id(point_progress.id)
     assert updated_count == 1
-    assert datetime.fromisoformat(point_progress_from_db.finished_at) == existing_datetime
+    assert point_progress_from_db.finished_at == existing_datetime
     assert point_progress_from_db.is_finished is True
 
 
@@ -87,7 +87,7 @@ def test_finish_progress_uses_current_time_by_default(point_progress_repo, point
 
     point_progress_from_db = point_progress_repo.get_by_id(point_progress.id)
     assert updated_count == 1
-    assert isinstance(datetime.fromisoformat(point_progress_from_db.finished_at), datetime)
+    assert isinstance(point_progress_from_db.finished_at, datetime)
 
 
 def test_finish_progress_does_not_affect_other_point_progresses(
