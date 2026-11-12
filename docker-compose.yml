@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres:17
+    container_name: motoquest_db
+    environment:
+      POSTGRES_USER: quest
+      POSTGRES_PASSWORD: quest
+      POSTGRES_DB: quest
+    ports:
+      # слева порт на твоей машине, справа порт внутри контейнера.
+      # 5432 на машине уже занят локальным PostgreSQL, поэтому берём 5433.
+      - "5433:5432"
+    volumes:
+      # именованный том: данные переживают пересоздание контейнера
+      - motoquest_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # pg_isready отвечает успехом только когда база реально готова принимать запросы
+      test: ["CMD-SHELL", "pg_isready -U quest -d quest"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  motoquest_pgdata:

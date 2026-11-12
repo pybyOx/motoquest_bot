@@ -8,6 +8,31 @@ on:
 jobs:
   pytest:
     runs-on: ubuntu-latest
+
+    # Контейнер с базой поднимается ДО первого шага и живёт всё время задачи.
+    services:
+      db:
+        image: postgres:17
+        env:
+          POSTGRES_USER: quest
+          POSTGRES_PASSWORD: quest
+          POSTGRES_DB: quest
+        ports:
+          # на раннере локального Postgres нет, поэтому обычный 5432
+          - 5432:5432
+        # то же, что healthcheck в docker-compose.yml, но флагами docker run:
+        # шаги не начнутся, пока база не ответит, что готова
+        options: >-
+          --health-cmd "pg_isready -U quest -d quest"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # Пока тесты идут на SQLite и эту переменную не читают.
+      # Она понадобится на следующем шаге, когда тесты переедут на Postgres.
+      TEST_DATABASE_URL: postgresql://quest:quest@localhost:5432/quest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -17,5 +42,8 @@ jobs:
           cache: pip
 
       - run: pip install -r requirements.txt
+
+      - name: Проверить, что Postgres отвечает
+        run: pg_isready -h localhost -p 5432 -U quest
 
       - run: pytest -q
