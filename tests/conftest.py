@@ -2,7 +2,9 @@ import os
 
 import psycopg2
 import pytest
+import pytest_asyncio
 from playhouse.postgres_ext import PostgresqlExtDatabase
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from database.db import database_params
 
@@ -23,7 +25,6 @@ from database.repositories.user_session_repository import UserSessionRepository
 from database.repositories.point_progress_repository import PointProgressRepository
 from database.repositories.admin_draft_repository import AdminDraftRepository
 from database.repositories.clue_repository import ClueRepository
-
 
 from datetime import datetime, UTC
 
@@ -89,6 +90,29 @@ def test_db(database):
     with database.atomic() as transaction:
         yield database
         transaction.rollback()
+
+
+@pytest_asyncio.fixture
+async def api_session(database):
+    """Сессия SQLAlchemy для тестов API.
+
+    Тест работает внутри транзакции, которая в конце откатывается.
+    """
+    url = TEST_DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    engine = create_async_engine(url)
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
+
+        yield session
+
+        await session.close()
+        await transaction.rollback()
+    await engine.dispose()
 
 
 @pytest.fixture
