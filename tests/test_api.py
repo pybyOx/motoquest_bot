@@ -21,6 +21,7 @@ async def test_list_games_returns_games_without_finish(api_session):
         GameInfo(
             title="Путь дракона",
             slug="way_of_the_dragon",
+            description="Тихий путь",
             finish={"text": "Финиш", "link": "https://example.com"},
         ),
         GameInfo(
@@ -45,5 +46,6 @@ async def test_list_games_returns_games_without_finish(api_session):
     assert response.status_code == 200
     data = response.json()
     assert [game["slug"] for game in data] == ["way_of_the_dragon", "second_game"]
-    assert set(data[0]) == {"id", "title", "slug"}
-    
+    assert set(data[0]) == {"id", "title", "slug", "description"}
+    assert data[0]["description"] == "Тихий путь"
+    assert data[1]["description"] == ""

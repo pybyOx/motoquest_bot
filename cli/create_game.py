@@ -56,6 +56,7 @@ def create_game(file_path: str) -> None:
         game_info = game_info_repo.create(dict(
             title=game_data["title"],
             slug=game_data["slug"],
+            description=game_data["description"],
             finish=game_data["finish"]
         ))
         for point_data in game_data["points"]:

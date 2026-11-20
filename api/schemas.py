@@ -7,3 +7,4 @@ class GameOut(BaseModel):
     id: int
     title: str
     slug: str
+    description: str

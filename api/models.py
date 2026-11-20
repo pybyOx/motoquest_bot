@@ -21,6 +21,7 @@ class GameInfo(Base):
     title: Mapped[str] = mapped_column(String(255))
     slug: Mapped[str] = mapped_column(String(255))
     finish: Mapped[dict] = mapped_column(JSONB)
+    description: Mapped[str] = mapped_column(Text, server_default="")
     points: Mapped[list["Point"]] = relationship(back_populates="game_info")
     game_sessions: Mapped[list["GameSession"]] = relationship(back_populates="game_info")
 
