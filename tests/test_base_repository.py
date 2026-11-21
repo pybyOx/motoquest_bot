@@ -1,8 +1,9 @@
 import pytest
-from peewee import DoesNotExist
+from peewee import DoesNotExist, IntegrityError
 
 from core.exceptions import AlreadyExistsError
 from database.models.user import User
+from database.repositories.game_info_repository import GameInfoRepository
 
 
 # ── get_by_id ─────────────────────────────────────────────────────────────────
@@ -35,6 +36,13 @@ def test_create_raises_already_exists_error_on_duplicate_id(user_repo):
         user_repo.create({"id": 123})
 
     assert "id" in str(exc_info.value)
+
+
+def test_create_reraises_integrity_error_that_is_not_duplicate(test_db):
+    game_info_repo = GameInfoRepository()
+
+    with pytest.raises(IntegrityError):
+        game_info_repo.create({"title": "Без финала", "slug": "no-finish"})  # finish NOT NULL
 
 
 # ── delete_by_id ──────────────────────────────────────────────────────────────

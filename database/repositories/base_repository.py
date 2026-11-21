@@ -28,6 +28,7 @@ class BaseRepository(Generic[T]):
         Создаёт и возвращает объект модели с указанными данными.
 
         :raises AlreadyExistsError: Если объект с такими данными уже существует (уникальные поля).
+        :raises IntegrityError: Любое другое нарушение целостности (NOT NULL, внешний ключ).
         """
         try:
             return self.model.create(**data)
@@ -36,6 +37,7 @@ class BaseRepository(Generic[T]):
                 fields = ", ".join(data.keys())
                 raise AlreadyExistsError(f"{self.model.__name__} с такими данными уже существует "
                                          f"\n(поля: {fields}).") from error
+            raise
 
     def update_by_id(
             self,
