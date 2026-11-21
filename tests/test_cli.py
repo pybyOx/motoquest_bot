@@ -30,6 +30,7 @@ MAP_LINK = "https://www.openstreetmap.org/node/1"
 VALID_GAME = {
     "title": "Тестовый квест",
     "slug": "test-quest",
+    "description": "Короткий квест по набережной",
     "finish": {"text": "Финиш", "link": MAP_LINK},
     "points": [
         {
@@ -75,6 +76,7 @@ def test_create_game_creates_game_points_and_clues(create_game, game_file):
 
     game = GameInfo.get(GameInfo.slug == "test-quest")
     assert game.title == "Тестовый квест"
+    assert game.description == "Короткий квест по набережной"
     assert game.finish == {"text": "Финиш", "link": MAP_LINK}
 
     point = Point.get(Point.game_info == game)
@@ -96,9 +98,14 @@ def test_create_game_exits_when_file_missing(create_game, tmp_path):
     assert GameInfo.select().count() == 0
 
 
-def test_create_game_exits_when_schema_violated(create_game, tmp_path):
-    broken = {**VALID_GAME}
-    del broken["finish"]  # обязательное поле по схеме
+@pytest.mark.parametrize("broken_part", [
+    {"finish": None},       # обязательное поле удалено
+    {"description": None},  # описание для витрины обязательно
+    {"description": ""},    # и не может быть пустым
+])
+def test_create_game_exits_when_schema_violated(create_game, tmp_path, broken_part):
+    broken = {**VALID_GAME, **broken_part}
+    broken = {key: value for key, value in broken.items() if value is not None}
     path = tmp_path / "broken.json"
     path.write_text(json.dumps(broken, ensure_ascii=False), encoding="utf-8")
 
