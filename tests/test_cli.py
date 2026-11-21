@@ -16,6 +16,7 @@ from cli import create_game as create_game_module
 from cli import recover_user as recover_user_module
 from cli import set_admin as set_admin_module
 from core.enums.user_role_types import RoleType
+from core.exceptions import AlreadyExistsError
 from core.utils import check_data
 from database.models.clue import Clue
 from database.models.game_info import GameInfo
@@ -114,6 +115,34 @@ def test_create_game_exits_when_schema_violated(create_game, tmp_path, broken_pa
 
     assert exit_info.value.code == 1
     assert GameInfo.select().count() == 0
+
+
+def test_create_game_leaves_nothing_when_fails_halfway(create_game, tmp_path, monkeypatch):
+    """Ошибка на середине загрузки не должна оставлять в базе недосозданную игру."""
+    second_point = {**VALID_GAME["points"][0], "title": "Вторая точка"}
+    game = {**VALID_GAME, "points": [VALID_GAME["points"][0], second_point]}
+    path = tmp_path / "game.json"
+    path.write_text(json.dumps(game, ensure_ascii=False), encoding="utf-8")
+
+    original_create = ClueRepository.create
+    created_clues = []
+
+    def fail_on_second_point(self, data):
+        if data["point"].title == "Вторая точка":
+            raise AlreadyExistsError("подсказка уже существует")
+        created_clues.append(data)
+        return original_create(self, data)
+
+    monkeypatch.setattr(ClueRepository, "create", fail_on_second_point)
+
+    with pytest.raises(SystemExit) as exit_info:
+        create_game(str(path))
+
+    assert len(created_clues) == 3  # первая точка успела загрузиться целиком
+    assert exit_info.value.code == 1
+    assert GameInfo.select().count() == 0
+    assert Point.select().count() == 0
+    assert Clue.select().count() == 0
 
 
 # ── set_admin ───────────────────────────────────────────────────────────

@@ -20,8 +20,6 @@ def create_game(file_path: str) -> None:
     point_repo = container.point_repo
     clue_repo = container.clue_repo
 
-    game_info = None
-
     try:
         file_path = Path(file_path)
         if not file_path.is_file():
@@ -53,32 +51,31 @@ def create_game(file_path: str) -> None:
         logging.debug("JSON и файлы прошли валидацию.")
 
     try:
-        game_info = game_info_repo.create(dict(
-            title=game_data["title"],
-            slug=game_data["slug"],
-            description=game_data["description"],
-            finish=game_data["finish"]
-        ))
-        for point_data in game_data["points"]:
-            point = point_repo.create(dict(
-                title=point_data["title"],
-                location=point_data["location"],
-                task=point_data["task"],
-                answer=point_data["answer"],
-                after_solved=point_data["after_solved"],
-                game_info=game_info
+        with game_info_repo.model._meta.database.atomic():
+            game_info = game_info_repo.create(dict(
+                title=game_data["title"],
+                slug=game_data["slug"],
+                description=game_data["description"],
+                finish=game_data["finish"]
             ))
-            for i, clue_text in enumerate(point_data["clues"], start=1):
-                clue_repo.create(dict(
-                    point=point,
-                    text=clue_text,
-                    order=i
+            for point_data in game_data["points"]:
+                point = point_repo.create(dict(
+                    title=point_data["title"],
+                    location=point_data["location"],
+                    task=point_data["task"],
+                    answer=point_data["answer"],
+                    after_solved=point_data["after_solved"],
+                    game_info=game_info
                 ))
+                for i, clue_text in enumerate(point_data["clues"], start=1):
+                    clue_repo.create(dict(
+                        point=point,
+                        text=clue_text,
+                        order=i
+                    ))
 
     except AlreadyExistsError as error:
         logging.error(f"Ошибка при создании игры: {error}")
-        if game_info:
-            game_info_repo.delete_by_id(id == game_info.id)
         sys.exit(1)
     else:
         logging.info(f"Информация о игре '{game_info}' успешно занесена в базу данных.")
