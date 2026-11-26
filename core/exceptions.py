@@ -29,3 +29,7 @@ class GameInvariantError(RuntimeError):
 class ConfigError(Exception):
     """Ошибка сборки конфига"""
     pass
+
+
+class InvalidInitData(Exception):
+    """initData не от Telegram, повреждены или устарели."""
